@@ -1,0 +1,19 @@
+# Configuración de Gastos y facturas (Raspberry). Este archivo tiene claves: no lo compartas.
+
+[gmail]
+usuario = "titular@example.com"
+# Contraseña de aplicación de Google (16 letras). Ver la guía, paso 3.
+clave_app = "PEGA AQUI LA CLAVE"
+
+[drive]
+# Nombre que le diste a Google Drive en "rclone config" (paso 5 de la guía)
+remoto = "drive"
+# Carpeta de tu Drive donde van Facturas/ y Respaldo/
+carpeta = "Gastos Demo"
+
+[app]
+puerto = 8080
+# Mientras corran en paralelo con Claude, déjalo en false.
+# Cuando apagues las tareas de Claude, ponlo en true para que la Raspberry
+# mande a la papelera los correos PI-BANCOS y la nota ya leídos.
+borrar_correos_raspberry = false

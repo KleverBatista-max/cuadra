@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar · Cuadra</title>
+<meta name="theme-color" content="#0f6b55">
+<link rel="icon" href="/static/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/static/iconoios.png">
+<link rel="manifest" href="/static/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cuadra">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+:root{--paper:#f4f6f3;--card:#fff;--ink:#16241f;--muted:#5f6f69;--line:#d9e0db;--accent:#0f6b55;--accent-ink:#fff;--bad:#a3271f}
+@media (prefers-color-scheme:dark){:root{--paper:#0f1614;--card:#18221f;--ink:#e8efeb;--muted:#9aaba4;--line:#2b3934;--accent:#4fc3a1;--accent-ink:#06231b;--bad:#ff9a90}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--paper);color:var(--ink);font:15px/1.4 "IBM Plex Sans",system-ui,-apple-system,sans-serif;padding:16px}
+form{width:100%;max-width:340px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:22px;margin:0 0 4px}
+label{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+input{font:inherit;color:inherit;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:12px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.err{color:var(--bad);font-size:13px;min-height:1em}
+</style>
+</head>
+<body>
+<form method="post" action="/login">
+  <h1><img src="/static/logo.svg" alt="" width="30" height="30" style="border-radius:8px;vertical-align:-6px;margin-right:8px">Cuadra</h1>
+  <label>Usuario<input name="usuario" autocomplete="username" autocapitalize="none" required></label>
+  <label>Contraseña<input name="clave" type="password" autocomplete="current-password" required></label>
+  <div class="err">__ERROR__</div>
+  <button type="submit">Entrar</button>
+</form>
+</body>
+</html>

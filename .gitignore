@@ -1,0 +1,21 @@
+# Claves y configuración local: nunca al repositorio
+*.env
+!*.env.example
+*.nosync
+config.toml
+secretos.json
+rclone.conf
+
+# Datos y salidas
+*.db
+*.db-wal
+*.db-shm
+gastos-datos/
+bancos_out/
+debug/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
