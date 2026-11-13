@@ -275,8 +275,13 @@ def banco_bac(page, env):
                     print("  BAC %s: no encontré un único botón 'Pagar tarjeta'" % u4)
             except Exception as e:
                 print("  BAC %s pago mínimo no leído:" % u4, e)
+            # Cuadre: deuda del banco = pago de contado + compras después del corte - pagos (lo de la lista)
+            cuadre = None
+            if pago.get("pagoContado") is not None and d.get("deuda") is not None:
+                cuadre = round(d["deuda"] - (pago["pagoContado"] - sum(m["monto"] for m in d["movs"])), 2)
             for r in res["tarjetas"]:
                 if r["id"] == ids[u4][0]:
+                    r.update(limpio({"cuadre": cuadre}))
                     r.update(limpio({"disponible": d.get("disponible"), "pagoDia": d.get("pagoDia"),
                                      "pagoMin": pago.get("pagoMin"), "saldoCorte": pago.get("pagoContado"),
                                      "transito": transito}))

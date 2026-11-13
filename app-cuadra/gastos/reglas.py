@@ -254,10 +254,15 @@ def aplicar_bancos(db, data, desde, log):
             if not db.exists("saldos", sid):
                 avisar(db, f"El lector de bancos trajo una cuenta que no existe en la app: {sid}.", clave="saldo-" + sid)
                 continue
-            patch = {k: x[k] for k in ("saldo", "deuda", "disponible", "corteDia", "pagoDia", "pagoMin", "saldoCorte", "transito") if k in x}
+            patch = {k: x[k] for k in ("saldo", "deuda", "disponible", "corteDia", "pagoDia", "pagoMin", "saldoCorte", "transito", "cuadre") if k in x}
             patch["desde"] = desde
             db.merge("saldos", sid, patch)
             saldos_tocados.append(sid)
+            if x.get("cuadre") is not None and abs(float(x["cuadre"])) > 0.01:
+                nom = db.get("saldos", sid).get("nombre") or sid
+                avisar(db, f"{nom} no cuadra por ${float(x['cuadre']):.2f}: la deuda del banco no es igual al pago de contado "
+                           f"más los movimientos después del corte. Puede faltar o sobrar un movimiento.",
+                       clave=f"cuadre-{sid}-{fecha_rep}")
     log.append(f"Saldos actualizados: {len(saldos_tocados)}")
 
     # Movimientos
