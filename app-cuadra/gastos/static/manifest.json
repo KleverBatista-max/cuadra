@@ -1,0 +1,2 @@
+{"name":"Cuadra","short_name":"Cuadra","start_url":"/","display":"standalone","background_color":"#f4f6f3","theme_color":"#0f6b55",
+ "icons":[{"src":"/static/icono.png","sizes":"512x512","type":"image/png"},{"src":"/static/logo.svg","sizes":"any","type":"image/svg+xml"}]}

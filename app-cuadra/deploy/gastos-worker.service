@@ -1,0 +1,12 @@
+[Unit]
+Description=Gastos y facturas (revisar correo, Drive y respaldo)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=__USUARIO__
+Environment=GASTOS_CONFIG=__DATOS__/config.toml
+WorkingDirectory=__APP__
+ExecStart=__APP__/venv/bin/python -m gastos revisar
+TimeoutStartSec=900

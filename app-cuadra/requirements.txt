@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+pypdf>=4.0
+requests
+beautifulsoup4
+opencv-python-headless==4.10.0.84
+zxing-cpp==3.1.1

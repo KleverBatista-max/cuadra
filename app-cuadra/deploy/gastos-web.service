@@ -1,0 +1,15 @@
+[Unit]
+Description=Gastos y facturas (pagina web)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=__USUARIO__
+Environment=GASTOS_CONFIG=__DATOS__/config.toml
+WorkingDirectory=__APP__
+ExecStart=__APP__/venv/bin/python -m gastos servidor
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
