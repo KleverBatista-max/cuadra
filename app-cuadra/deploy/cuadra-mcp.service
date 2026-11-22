@@ -1,0 +1,16 @@
+[Unit]
+Description=Cuadra - conector del asistente (127.0.0.1:9100; se publica en /mcp por Tailscale)
+After=network-online.target
+
+[Service]
+User=__USUARIO__
+Environment=GASTOS_CONFIG=__DATOS__/config.toml
+WorkingDirectory=__APP__
+ExecStart=__APP__/venv/bin/python -m gastos mcp
+Restart=on-failure
+RestartSec=5
+MemoryMax=160M
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

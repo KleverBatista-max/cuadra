@@ -5,6 +5,15 @@ Esto es el código de la app **Cuadra** de Titular Demo (gastos, tarjetas, cuent
 del servidor, `/root/MANUAL.md`): sección 0 (resumen), 4.5 (reglas), 4.5b (conciliación con bancos), 4.8 (pruebas) y 11
 (reglas para cualquier IA). Habla con Titular en español, simple y directo.
 
+## Lista de cierre: TODO cambio termina así (pedido de Titular, 22 nov 2026)
+
+1. Pruebas verdes (`venv/bin/python -m pytest`) y commit + `git push` de este repo (privado `cuadra-app`).
+2. Documentado: `/root/MANUAL.md` (sección 4 y 10) y luego `manual-sync`.
+3. **Listo para respaldo y mudanza:** cualquier archivo, servicio, programa (apt/pip/node) o ruta de Tailscale NUEVO debe quedar en
+   `/opt/respaldo/respaldo.sh`, `/opt/bancos/restaurar.sh` e `instalar.sh` (+ `deploy/`). Si no, la mudanza lo pierde.
+4. Versión pública: correr `/opt/bancos/publico/publicar.sh` (y subir `/opt/bancos` a GitHub) y revisar que diga «publicado» o «sin cambios».
+5. Un solo lugar para cada regla de cálculo (saldos/Neto: `gastos/static/calculo.js`); no copiar fórmulas.
+
 ## Reglas que no se rompen
 
 - **Manda la banca en línea.** El correo es un aviso provisional; lo que lee el lector de bancos lo corrige (MANUAL 4.5b).
@@ -13,6 +22,26 @@ del servidor, `/root/MANUAL.md`): sección 0 (resumen), 4.5 (reglas), 4.5b (conc
 - **Nada de pagar/transferir en los bancos**: el lector solo lee (MANUAL 11.1).
 - No leer ni imprimir `config.toml`, `secretos.json`, `rclone.conf` ni credenciales.
 - El repo **público** `cuadra` solo se actualiza con `/opt/bancos/publico/publicar.sh` (copia saneada). Nunca subir ahí ramas.
+
+## Cuando Titular pide algo sobre sus DATOS («de los $30, $15 son de Beatriz», «Ana ya pagó», «ese no cuenta»)
+
+**No es un cambio de código y no se inventan reglas.** La estructura de la app ya alcanza: se juega con lo que existe
+(movimientos, la marca `cxc`, notas). Usa **`gastos asistente`** (comandos fijos, probados, con copia, bitácora y deshacer):
+
+```bash
+cd /home/gastos/gastos-app && sudo -u gastos -H venv/bin/python -m gastos asistente --help
+```
+
+1. `buscar` para sacar el id del movimiento (texto, `--fecha`, `--monto`). 2. `debe PERSONA MONTO "motivo" --mov ID`
+(deuda suelta), `dividir MOV "Beatriz, Laura" [--montos "Beatriz=15"]` (cuando la cuenta se DIVIDIÓ entre varias personas: usa la misma función «Dividir» de la página; `ninguna` la quita), `abono` (ya pagó) o `marcar MOV PERSONA|ninguna`. 3. `cuenta PERSONA` para comprobar el resultado y decírselo a
+Titular. 4. Si se equivocó o se arrepiente: `deshacer ID_BITACORA`.
+
+- Si falta un dato (¿me deben o ya pagó? ¿a quién?), **pregunta**; no adivines.
+- No edites la base ni `/api/d/...` a pulso y no excluyas movimientos propios (decisión de Titular, 18 nov).
+- Desde el teléfono Titular puede usar los mismos comandos por el conector `cuadra-mcp` (chat de claude.ai); es la misma capa:
+  mismas reglas, misma bitácora. Código en `gastos/mcp_servidor.py`; si agregas un comando al asistente, agrégalo ahí también.
+- Si lo que pide no cabe en estos comandos, primero entiende y explica; solo si Titular lo autoriza se agrega un comando nuevo
+  (con su prueba en `tests/test_asistente.py`). Detalle: MANUAL sección 10, «22 nov 2026 (noche)».
 
 ## Pruebas (obligatorio)
 

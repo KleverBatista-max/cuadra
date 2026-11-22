@@ -53,6 +53,7 @@ for f in config github_cuadra_bancos github_cuadra_bancos.pub github_cuadra_publ
 done
 ssh-keyscan -t ed25519 github.com 2>/dev/null >> /root/.ssh/known_hosts || true
 for f in gastos-web.service gastos-worker.service gastos-worker.timer; do cp "$X/etc/systemd/system/$f" /etc/systemd/system/; done
+[ -f "$X/etc/systemd/system/cuadra-mcp.service" ] && cp "$X/etc/systemd/system/cuadra-mcp.service" /etc/systemd/system/   # conector del teléfono (22 nov 2026)
 [ -f "$X/etc/systemd/system/paquetes-web.service" ] && cp "$X/etc/systemd/system/paquetes-web.service" /etc/systemd/system/
 [ -f "$X/etc/systemd/system/reclamos.service" ] && cp "$X/etc/systemd/system/reclamos.service" /etc/systemd/system/
 [ -f "$X/etc/systemd/system/facturas.service" ] && cp "$X/etc/systemd/system/facturas.service" /etc/systemd/system/
@@ -90,7 +91,7 @@ sudo -u gastos -H /home/gastos/gastos-app/venv/bin/pip install -q -r /home/gasto
 printf '#!/bin/sh\nexport GASTOS_CONFIG="/home/gastos/gastos-datos/config.toml"\ncd "/home/gastos/gastos-app" && exec "/home/gastos/gastos-app/venv/bin/python" -m gastos "$@"\n' > /usr/local/bin/gastos
 chmod +x /usr/local/bin/gastos
 
-echo "==> 5/8 Paquetes Demo (Node 22)"
+echo "==> 5/8 Node 22 (Paquetes Demo y el conector de Cuadra: gastos/static/calculo.js)"
 need=1
 if command -v node >/dev/null; then
   [ "$(node -e 'const [a,b]=process.versions.node.split(".").map(Number); console.log((a>22||(a===22&&b>=13))?1:0)')" = 1 ] && need=0
@@ -132,6 +133,7 @@ if [ "$PRUEBA" = 1 ]; then
   echo "    MODO PRUEBA: revisión automática apagada y horarios NO instalados (quedaron en /root/crontab-del-respaldo.txt)."
 else
   systemctl enable --now gastos-web.service gastos-worker.timer
+  [ -f /etc/systemd/system/cuadra-mcp.service ] && systemctl enable --now cuadra-mcp.service   # conector del teléfono: solo 127.0.0.1:9100 (en prueba no: chocaría con el real)
   crontab "$X/crontab-root.txt"
 fi
 git config --global --get-all safe.directory 2>/dev/null | grep -qx /home/gastos/gastos-app || git config --global --add safe.directory /home/gastos/gastos-app
@@ -149,6 +151,7 @@ echo "    (Antes borra o apaga el servidor viejo en tailscale.com/admin para que
 tailscale up --hostname=mi-servidor
 tailscale serve --bg 8080
 tailscale funnel --bg 8080
+[ -f /etc/systemd/system/cuadra-mcp.service ] && tailscale funnel --bg --set-path=/mcp http://127.0.0.1:9100/mcp   # conector del teléfono (el Funnel de la página sirve también /mcp)
 [ -f /etc/systemd/system/paquetes-web.service ] && tailscale funnel --bg --https=8443 http://127.0.0.1:8090
 [ -f /etc/systemd/system/reclamos.service ] && tailscale funnel --bg --https=10000 http://127.0.0.1:8095
 [ -f /etc/systemd/system/facturas.service ] && tailscale funnel --bg --https=8443 --set-path=/factura http://127.0.0.1:8096

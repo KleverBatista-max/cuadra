@@ -6,6 +6,8 @@
   importar <respaldo.json>      carga un respaldo de la app (reemplaza todo)
   probar-gmail                  comprueba que la contraseña de aplicación funciona
   probar-drive                  comprueba que Google Drive está conectado
+  mcp                           conector MCP del asistente para claude.ai (lo corre systemd: cuadra-mcp)
+  asistente <comando>           cambios a mano con bitácora y deshacer (ver: gastos asistente --help)
 """
 import getpass
 import json
@@ -25,6 +27,15 @@ def main(argv):
         import uvicorn
         from .web import crear_app
         uvicorn.run(crear_app(cfg), host="127.0.0.1", port=cfg.puerto, proxy_headers=True, log_level="warning")
+        return 0
+
+    if cmd == "asistente":
+        from .asistente import cli
+        return cli(cfg, args)
+
+    if cmd == "mcp":
+        from .mcp_servidor import servir
+        servir(cfg)
         return 0
 
     if cmd == "revisar":

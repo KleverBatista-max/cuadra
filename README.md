@@ -76,13 +76,15 @@ app-cuadra/
   gastos/parsers.py      Avisos de cada banco, Yappy y +Móvil
   gastos/facturas*.py    Facturas por PDF, foto y QR de la DGI
   gastos/web.py          API y autenticación (FastAPI)
+  gastos/static/calculo.js  Cálculo de saldos, liquidez y fechas: UNA copia, usada por la página y por el servidor (vía node)
+  gastos/resumen.py      Resumen (Neto, tarjetas, cuentas) para el asistente; solo da formato, el cálculo está en calculo.js
   gastos/static/         Interfaz (una sola página, instalable como app)
   deploy/                Servicios systemd y configuración de ejemplo
 ```
 
 ## Instalación
 
-Requisitos: Ubuntu 24.04 o Raspberry Pi OS 64 bits, Python 3.11+, una cuenta de Gmail con contraseña de aplicación y, opcionalmente, Google Drive (rclone) y Tailscale.
+Requisitos: Ubuntu 24.04 o Raspberry Pi OS 64 bits, Python 3.11+, Node.js 18+ (los saldos, el Neto y las fechas de tarjetas se calculan en un solo archivo, `gastos/static/calculo.js`, que usan la página y el servidor), una cuenta de Gmail con contraseña de aplicación y, opcionalmente, Google Drive (rclone) y Tailscale.
 
 ```bash
 # App web y worker

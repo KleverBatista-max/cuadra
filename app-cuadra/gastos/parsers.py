@@ -121,7 +121,7 @@ _BAC_MARCAS = {"AMEX": "BAC Amex", "MASTERCARD": "BAC MC", "VISA": "BAC Visa"}
 
 def bac_tarjeta(c):
     t = c.cuerpo
-    m = re.search(r"tarjeta\s+(adicional\s+)?(AMEX|MASTERCARD|VISA)\s+terminada en\s+(\d{4})(?:\s+a nombre de\s+([A-ZÁÉÍÓÚÑ ]+?)\s*\n)?", t, re.I)
+    m = re.search(r"tarjeta\s+(adicional\s+)?(AMEX|MASTERCARD|VISA)\s+terminada\s+en\s+(\d{4})(?:\s+a nombre de\s+([A-ZÁÉÍÓÚÑ ]+?)\s*\n)?", t, re.I)
     lineas = [l.strip() for l in t.splitlines() if l.strip()]
     try:
         i = lineas.index("Monto")

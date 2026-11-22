@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from . import facturas_dgi
 from . import conexiones
 from . import sueltas
+from . import divisiones
 from . import reglas
 
 AQUI = os.path.dirname(__file__)
@@ -217,6 +218,13 @@ def crear_app(cfg=None):
                 data.update(quien=u["nombre"], bolsa="Beatriz" if u["nombre"] == "Beatriz" else "Titular")
         if coll == "sistema":
             raise HTTPException(403)
+        if coll == "movs" and actual.get("divDe"):
+            raise HTTPException(409, "Esto es una parte de una división: se cambia desde la transacción principal.")
+        if coll == "movs" and "division" in data:
+            try:
+                data["division"] = divisiones.validar(db, id, {**actual, **data}, data["division"])
+            except divisiones.ErrorDivision as e:
+                raise HTTPException(422, str(e))
         db.merge(coll, id, data)
         if coll in ("movs", "cxc"):
             reglas.recalcular_cxc(db)
@@ -233,6 +241,8 @@ def crear_app(cfg=None):
             raise HTTPException(403, "No permitido")
         if coll == "sistema":
             raise HTTPException(403)
+        if coll == "movs" and actual.get("divDe"):
+            raise HTTPException(409, "Esto es una parte de una división: quítala desde la transacción principal.")
         db.delete(coll, id)
         if coll == "movs":
             reglas.recalcular_cxc(db)

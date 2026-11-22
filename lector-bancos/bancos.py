@@ -666,6 +666,10 @@ def main():
                 ctx, page = abrir(pw, nombre, a.headless)
                 try:
                     r = BANCOS[nombre](page, env)
+                    if nombre == "bg" and not r["movimientos"]:
+                        # 21 nov 2026 (10:00): BG dio 'ok' con 0 movimientos (siempre trae 24-40) y la app creyó que el banco
+                        # no había asentado nada. Lectura incompleta = fallo: se reintenta como cualquier otro.
+                        raise RuntimeError("BG no trajo ningún movimiento (lectura incompleta)")
                     payload["bancos"].append(r)
                     print("  ok: %d cuentas, %d tarjetas, %d movimientos" % (len(r["cuentas"]), len(r["tarjetas"]), len(r["movimientos"])), flush=True)
                 except Exception as e:

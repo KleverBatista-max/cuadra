@@ -15,6 +15,13 @@ def es_entrante(d):
 
 
 # ---------------- avisos ("Por revisar") ----------------
+def nombre_tarjeta(s, sid):
+    """Nombre para los avisos con el banco (hay dos Mastercard: BAC y Global): «Mastercard (BAC)»."""
+    nom = (s or {}).get("nombre") or sid
+    banco = (s or {}).get("banco")
+    return f"{nom} ({banco})" if banco and banco not in nom else nom
+
+
 def avisar(db, texto, tipo="revisar", clave=None):
     clave = clave or texto
     id = "av-" + hashlib.sha1(clave.encode()).hexdigest()[:12]
@@ -112,6 +119,8 @@ def _cxc_quitar(db, pid, valor):
 
 def recalcular_cxc(db):
     """Casilla 2 de cada persona: suma de los movimientos marcados (mov.cxc). No toca las partidas de la nota."""
+    from . import divisiones   # las partes de las transacciones divididas se igualan primero (ver divisiones.py)
+    divisiones.sincronizar(db, avisar)
     por = {}
     for m in db.all("movs"):
         c = m.get("cxc")
@@ -370,12 +379,12 @@ def aplicar_bancos(db, data, desde, log):
                     db.merge("saldos", sid, {"limiteCuadre": linea})
                 elif abs(linea - float(antes)) > max(0.01, fin * 0.01):
                     linea_mala.add(sid)
-                    nom = db.get("saldos", sid).get("nombre") or sid
+                    nom = nombre_tarjeta(db.get("saldos", sid), sid)
                     avisar(db, f"{nom} no cuadra: adeudado + disponible + en tránsito = ${linea:,.2f}, y siempre daba "
                                f"${float(antes):,.2f} (diferencia ${linea - float(antes):,.2f}). Puede faltar un movimiento "
                                f"o el banco cambió el límite.", clave=f"linea-{sid}-{fecha_rep}-{linea}")
             if x.get("cuadre") is not None and abs(float(x["cuadre"])) > 0.01:
-                nom = db.get("saldos", sid).get("nombre") or sid
+                nom = nombre_tarjeta(db.get("saldos", sid), sid)
                 avisar(db, f"{nom} no cuadra por ${float(x['cuadre']):.2f}: la deuda del banco no es igual al pago de contado "
                            f"más los movimientos después del corte. Puede faltar o sobrar un movimiento.",
                        clave=f"cuadre-{sid}-{fecha_rep}")
@@ -593,6 +602,22 @@ def aplicar_bancos(db, data, desde, log):
     for sid in saldos_tocados:
         s = db.get("saldos", sid)
         medios = s.get("medios") or []
+        if s.get("tipo") != "tarjeta":
+            # 21 nov 2026: BG llegó con 0 movimientos y TODOS los Yappy del correo quedaron «flotantes» (la página los sumó
+            # otra vez encima del saldo: +$248.44). Una cuenta sin NINGUNA fila del banco en esta lectura no sirve para
+            # decidir qué asentó el banco: no se toca lo pendiente y se avisa (antes cuadre_yappy callaba).
+            claves = {clave_medio(m) for m in medios}
+            if not any(clave_medio(m.get("medio")) in claves for m in todos):
+                # solo importan los del CORREO: son los únicos que esta lectura podría marcar flotantes por error. Una cuenta
+                # quieta (sin filas hoy) que solo tiene movimientos del banco no es una lectura mala (21 nov, «No la uses»).
+                esp = [d for d in db.where("movs", "fecha", ">=", (hoy - timedelta(days=5)).isoformat())
+                       if d.get("origen") == "correo" and clave_medio(d.get("medio")) in claves]
+                if esp:
+                    avisar(db, f"{nombre_tarjeta(s, sid)}: el lector no trajo ningún movimiento del banco, pero la app tiene "
+                               f"{len(esp)} del correo en los últimos 5 días. Esa lectura quedó incompleta: no se tocó nada de lo pendiente. "
+                               f"Si pasa otra vez, avísame.", clave=f"sinmovs-{sid}-{desde[:13]}")
+                    log.append(f"{sid}: lectura sin movimientos del banco, se ignora para lo pendiente")
+                continue
         pend = []
         for d in db.where("movs", "fecha", ">=", (hoy - timedelta(days=VENTANA_AVISOS)).isoformat()):
             if d.get("origen") != "correo" or d.get("medio") not in medios:
@@ -690,7 +715,7 @@ def cuadre_disponible(db, sid, desde, log):
             k = round(k - float(m["monto"]), 2)
     if antes.get("k") is not None and abs(k - float(antes["k"])) > 0.01:
         dif = round(k - float(antes["k"]), 2)
-        avisar(db, f"{s.get('nombre') or sid}: el disponible no cuadra con los movimientos por ${abs(dif):,.2f} desde la lectura "
+        avisar(db, f"{nombre_tarjeta(s, sid)}: el disponible no cuadra con los movimientos por ${abs(dif):,.2f} desde la lectura "
                    f"del {str(antes.get('desde', ''))[:16].replace('T', ' ')}. "
                    f"{'Sobra disponible: puede sobrar un movimiento en la app o faltar un pago.' if dif > 0 else 'Falta disponible: puede faltar una compra en la app.'}",
                clave=f"disp-{sid}-{desde}")
@@ -727,7 +752,7 @@ def cuadre_cuenta(db, sid, desde, log):
         return
     pend = antes.get("pend")
     if pend is not None and abs(float(pend) - dif) <= 0.01:
-        nom = s.get("nombre") or sid
+        nom = nombre_tarjeta(s, sid)
         avisar(db, f"{nom}: el saldo del banco no cuadra con los movimientos de la app por ${abs(dif):,.2f} (dos lecturas "
                    f"seguidas, desde la del {str(antes.get('desde', ''))[:16].replace('T', ' ')}). "
                    f"{'Puede faltar una entrada en la app o sobrar una salida.' if dif > 0 else 'Puede sobrar una entrada repetida en la app o faltar una salida.'}",

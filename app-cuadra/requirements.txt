@@ -6,3 +6,4 @@ requests
 beautifulsoup4
 opencv-python-headless==4.10.0.84
 zxing-cpp==3.1.1
+mcp>=2,<3

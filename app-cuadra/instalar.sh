@@ -9,7 +9,7 @@ DATOS="$HOME/gastos-datos"
 
 echo "==> 1/5 Instalando programas del sistema (te puede pedir tu contraseña de la Raspberry)"
 sudo apt-get update -qq
-sudo apt-get install -y -qq python3 python3-venv python3-pip rclone tesseract-ocr tesseract-ocr-spa rsync >/dev/null
+sudo apt-get install -y -qq python3 python3-venv python3-pip nodejs rclone tesseract-ocr tesseract-ocr-spa rsync >/dev/null   # nodejs: lo usa gastos/static/calculo.js desde el servidor (resumen del asistente)
 
 if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)'; then
   echo "Tu Raspberry tiene un Python viejo ($(python3 --version)). Hace falta Raspberry Pi OS Bookworm o más nuevo."
@@ -36,7 +36,7 @@ printf '#!/bin/sh\nexport GASTOS_CONFIG="%s/config.toml"\ncd "%s" && exec "%s/ve
 sudo chmod +x /usr/local/bin/gastos
 
 echo "==> 4/5 Dejando todo corriendo solo (también al reiniciar)"
-for f in gastos-web.service gastos-worker.service gastos-worker.timer; do
+for f in gastos-web.service gastos-worker.service gastos-worker.timer cuadra-mcp.service; do   # cuadra-mcp (asistente por conector) se instala pero NO se enciende: ver MANUAL 4.5
   sed -e "s#__USUARIO__#$YO#g" -e "s#__APP__#$APP#g" -e "s#__DATOS__#$DATOS#g" "$APP/deploy/$f" | sudo tee "/etc/systemd/system/$f" >/dev/null
 done
 sudo systemctl daemon-reload
