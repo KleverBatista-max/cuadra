@@ -117,6 +117,16 @@ def _cxc_quitar(db, pid, valor):
     return False
 
 
+def saldo_cxc(items, base=0.0):
+    """Lo que la persona debe por sus movimientos, en orden de fecha (23 nov 2026, decisión de Titular): si un abono se pasa de lo que
+    debía, el sobrante es de Titular y se descarta en ese momento (la cuenta queda en 0, sin saldo a favor); una deuda nueva después
+    empieza desde cero. En la misma fecha las deudas cuentan antes que los abonos, para que un pago del mismo día no se pierda."""
+    saldo = float(base)   # `base` = lo que ya dice la nota del iPhone (casilla 1): los abonos también se le restan
+    for x in sorted(items, key=lambda x: (x["fecha"] or "", 0 if x["monto"] > 0 else 1, x["mov"])):
+        saldo = max(0.0, round(saldo + x["monto"], 2))
+    return round(saldo, 2)
+
+
 def recalcular_cxc(db):
     """Casilla 2 de cada persona: suma de los movimientos marcados (mov.cxc). No toca las partidas de la nota."""
     from . import divisiones   # las partes de las transacciones divididas se igualan primero (ver divisiones.py)
@@ -132,7 +142,8 @@ def recalcular_cxc(db):
         por.setdefault(c["id"], []).append({"mov": m["id"], "fecha": m.get("fecha"), "comercio": m.get("comercio"), "monto": v})
     for p in db.all("cxc"):
         items = sorted(por.get(p["id"], []), key=lambda x: (x["fecha"] or "", x["mov"]))
-        tot = round(sum(x["monto"] for x in items), 2)
+        base = round(sum(float(v) for v in (p.get("partidas") or [])), 2)
+        tot = round(saldo_cxc(items, base) - base, 2)   # casilla 2 = lo que los movimientos suman o restan a la nota
         if p.get("deMovs") != tot or (p.get("detalleMovs") or []) != items:
             db.merge("cxc", p["id"], {"deMovs": tot, "detalleMovs": items})
 
@@ -1021,6 +1032,7 @@ def aplicar_nota(db, texto, hoy, log):
         if x not in borrar and sum(x.get("partidas") or []) > 0:
             avisar(db, f"{x['nombre']} está en la app con ${sum(x['partidas']):.2f} pero ya no aparece en tu nota.",
                    clave=f"nota-falta-{x['id']}-{sum(x['partidas'])}")
+    recalcular_cxc(db)   # la casilla 2 depende de lo que diga la nota (los abonos no bajan de 0)
     return True
 
 
