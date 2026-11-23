@@ -757,15 +757,7 @@ button.divx:active{background:var(--paper)}
         b.addEventListener('click',async function(){if(!S.canWrite||!S.db)return;var cs=(m.cobros||[]).map(function(x){return Object.assign({},x);});cs[i].pagado=!cs[i].pagado;try{await S.db.doc('movil/'+m.id).update({cobros:cs});}catch(e){}});
         host.appendChild(b);
       });
-      var np=(m.cobros||[]).filter(function(c){return c.pagado;}).length;
-      host.appendChild(el('div','hint','Lista de chequeo: '+np+' de '+(m.cobros||[]).length+' marcadas como pagadas. Lo que debe cada quien está en Por cobrar.'));
       var cg=(m.costoMov&&m.costo&&S.canWrite&&!S.vista)?m.costo:null;
-      var tl=(m.cobros||[]).reduce(function(t,c){return t+(Number(c.monto)||0);},0);
-      if(cg){
-        var k1=el('div','kv');k1.appendChild(el('span',null,'Cargo del plan ('+(cg.fecha||'')+')'));k1.appendChild(el('span','num',money(cg.monto)));host.appendChild(k1);
-        var k2=el('div','kv');k2.appendChild(el('span',null,'Cobros del mes (todas las líneas)'));k2.appendChild(el('span','num',money(tl)));host.appendChild(k2);
-        var k3=el('div','kv tot');k3.appendChild(el('span',null,tl-cg.monto>=0?'Ganancia':'Pérdida'));k3.appendChild(el('span','num',money(tl-cg.monto)));host.appendChild(k3);
-      }
       if(S.canWrite&&S.db){
         var pb=el('button','btn',cg?'Cambiar el cargo del plan':'Elegir el cargo del plan');pb.type='button';pb.style.marginTop='8px';
         pb.addEventListener('click',function(){pickCargoMovil(m);});host.appendChild(pb);
