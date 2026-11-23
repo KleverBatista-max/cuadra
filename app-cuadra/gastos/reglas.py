@@ -737,7 +737,9 @@ def cuadre_cuenta(db, sid, desde, log):
     for m in db.where("movs", "fecha", ">=", ANCLA_DISP):
         if m.get("medio") not in medios or m.get("caido"):
             continue
-        if f"{m['fecha']}T{m.get('hora') or '00:01'}" > desde:
+        # 22 nov 2026: lo que trae la lectura del banco (origen banco) YA está en su saldo aunque el banco lo anote con fecha
+        # de mañana (el Kuara de $58 de la noche del 22 salió como del 23): solo se deja fuera lo posterior que NO vino del banco.
+        if m.get("origen") != "banco" and f"{m['fecha']}T{m.get('hora') or '00:01'}" > desde:
             continue
         v = abs(float(m.get("monto") or 0))
         t += v if es_entrante(m) else -v
@@ -830,6 +832,17 @@ def cuadre_yappy(db, todos, fecha_rep, log):
         return True
 
     corridos = set()
+    # 22 nov 2026: el banco solo trae 10 días; el primer día de la ventana no tiene a su víspera para emparejar el Yappy
+    # de noche (Luis 11 nov 22:01, BG lo anotó el 12). Si al primer día le sobra en el banco lo que la app tiene de noche
+    # la víspera, es el mismo movimiento corrido: no es descuadre.
+    prev = (fecha_de(f0) - timedelta(days=1)).isoformat()
+    d0 = dif.get(f0, 0)
+    if d0 < -0.005:
+        noche0 = [signo(x) for x in db.where("movs", "fecha", "==", prev)
+                  if clave_medio(x.get("medio")) == yappy and (x.get("hora") or "") >= "18:00"][:12]
+        if any(abs(sum(g) + d0) < 0.005 for n in range(1, len(noche0) + 1) for g in combinations(noche0, n)):
+            corridos.add(f0)
+            log.append(f"Yappy {prev}: ${-d0:,.2f} de noche que el banco anotó el {f0}")
     for f in dias:
         sig = (fecha_de(f) + timedelta(days=1)).isoformat()
         d = dif.get(f, 0)
