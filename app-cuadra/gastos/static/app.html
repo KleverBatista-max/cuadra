@@ -759,12 +759,35 @@ button.divx:active{background:var(--paper)}
       });
       var pm=(m.cobros||[]).reduce(function(t,c){return t+(c.pagado?0:Number(c.monto)||0);},0);
       var tr=el('div','kv tot');tr.appendChild(el('span',null,'Total por cobrar'));tr.appendChild(el('span','num',money(pm)));host.appendChild(tr);
+      var cg=(m.costoMov&&m.costo&&S.canWrite&&!S.vista)?m.costo:null;
+      var tl=(m.cobros||[]).reduce(function(t,c){return t+(Number(c.monto)||0);},0);
+      if(cg){
+        var k1=el('div','kv');k1.appendChild(el('span',null,'Cargo del plan ('+(cg.fecha||'')+')'));k1.appendChild(el('span','num',money(cg.monto)));host.appendChild(k1);
+        var k2=el('div','kv');k2.appendChild(el('span',null,'Cobros del mes (todas las líneas)'));k2.appendChild(el('span','num',money(tl)));host.appendChild(k2);
+        var k3=el('div','kv tot');k3.appendChild(el('span',null,tl-cg.monto>=0?'Ganancia':'Pérdida'));k3.appendChild(el('span','num',money(tl-cg.monto)));host.appendChild(k3);
+      }
+      if(S.canWrite&&S.db){
+        var pb=el('button','btn',cg?'Cambiar el cargo del plan':'Elegir el cargo del plan');pb.type='button';pb.style.marginTop='8px';
+        pb.addEventListener('click',function(){pickCargoMovil(m);});host.appendChild(pb);
+      }
     }else{host.appendChild(el('div','hint','Todavía no llega la factura de +Móvil de este mes.'));}
     if(S.canWrite&&S.db){
       var eb=el('button','btn',m?'Editar líneas':'Abrir este mes');eb.type='button';eb.style.marginTop='8px';
       eb.addEventListener('click',function(){editMovil(m);});host.appendChild(eb);
     }
     $('movilSum').textContent='+Móvil corporativo';
+  }
+  async function pickCargoMovil(m){
+    var d0=new Date(Date.now()-75*864e5).toISOString().slice(0,10),rows=[];
+    try{var q=await S.db.collection('movs').where('fecha','>=',d0).get();rows=q.docs.map(function(d){var o=Object.assign({},d.data());o.id=d.id;return o;});}catch(e){alert('No pude leer los movimientos.');return;}
+    var re=/m[aá]s ?m[oó]|\+m[oó]vil|servicio (fijo|celular)/i;
+    var c=rows.filter(function(x){return x.tipo==='Compra'&&re.test(x.comercio||'');}).sort(function(a,b){return String(b.fecha).localeCompare(String(a.fecha));}).slice(0,12);
+    if(!c.length){alert('No encontré cargos de Más Móvil en Movimientos.');return;}
+    var opts=[{v:'',t:'— ninguno —'}].concat(c.map(function(x){return {v:x.id,t:x.fecha+' · '+x.comercio+' · '+money(x.monto)+' · '+(x.medio||'')};}));
+    mini('Cargo del plan · '+monthLabel(m.mes||m.id),[{k:'cargo',label:'¿Cuál es el cargo de este mes? (el costo del plan; la ganancia sale de los cobros menos este monto)',type:'sel',options:opts,value:m.costoMov||''}],async function(v){
+      var x=rows.filter(function(r){return r.id===v.cargo;})[0];
+      await S.db.doc('movil/'+m.id).update({costoMov:x?x.id:'',costo:x?{fecha:x.fecha,comercio:x.comercio,monto:x.monto,medio:x.medio||''}:null});
+    });
   }
   function editMovil(m){
     var base=m;if(!base){var prev=S.movil.filter(function(x){return String(x.id)<S.month;}).sort(function(x,y){return String(x.id).localeCompare(String(y.id));});base=prev[prev.length-1]||{cobros:[]};}
@@ -784,8 +807,9 @@ button.divx:active{background:var(--paper)}
   var M={save:null,del:null,armed:false,keys:[]};
   function mini(title,fields,onSave,onDel){
     $('mTitle').textContent=title;var f=$('mForm');f.textContent='';
-    fields.forEach(function(x){var w=el('div','f wide');var l=el('label',null,x.label);l.htmlFor='m_'+x.k;var i=el(x.type==='area'?'textarea':'input');i.id='m_'+x.k;
-      if(x.type==='number'){i.type='number';i.step='0.01';i.inputMode='decimal';}else if(x.type!=='area'){i.type='text';}
+    fields.forEach(function(x){var w=el('div','f wide');var l=el('label',null,x.label);l.htmlFor='m_'+x.k;var i=el(x.type==='area'?'textarea':x.type==='sel'?'select':'input');i.id='m_'+x.k;
+      if(x.type==='sel'){(x.options||[]).forEach(function(o){var op=el('option',null,o.t);op.value=o.v;i.appendChild(op);});}
+      if(x.type==='number'){i.type='number';i.step='0.01';i.inputMode='decimal';}else if(x.type!=='area'&&x.type!=='sel'){i.type='text';}
       i.value=x.value==null?'':x.value;w.appendChild(l);w.appendChild(i);f.appendChild(w);});
     M.save=onSave;M.del=onDel||null;M.armed=false;M.keys=fields.map(function(x){return x.k;});
     $('mDel').style.display=onDel?'':'none';$('mDel').textContent='Eliminar';$('mErr').textContent='';$('mSave').disabled=!S.canWrite;

@@ -203,7 +203,7 @@ def globalbank(c):
     medio = f"Global {ult4}"
     quien, bolsa = quien_bolsa(medio)
     mov = _base(c, comercio=limpiar_comercio(comercio), monto=monto(valor), medio=medio, quien=quien, bolsa=bolsa)
-    if re.search(r"SERVICIO FIJO MAS MOV|MAS MOVIL|\+M[OÓ]VIL", comercio, re.I):
+    if re.search(r"SERVICIO FIJO MAS MOV|SERVICIO CELULAR MAS M|MAS MOVIL|\+M[OÓ]VIL", comercio, re.I):
         mov.update(comercio="+Móvil (factura del plan)", bolsa="Excluido", factura="No aplica",
                    notas="Factura +Móvil", movil=True)
     elif re.search(r"\bpuma\b", comercio, re.I) and float(valor.replace(",", "")) in (10.0, 20.0, 50.0, 85.0, 100.0):
