@@ -228,6 +228,12 @@ def crear_app(cfg=None):
         db.merge(coll, id, data)
         if coll in ("movs", "cxc"):
             reglas.recalcular_cxc(db)
+        if coll == "movil" and data.get("costoMov"):   # al elegir el cargo del plan, lo que debe cada línea pasa a Por cobrar
+            from .asistente import ErrorAsistente
+            try:
+                reglas.cargar_movil(db, id, data["costoMov"])
+            except ErrorAsistente as e:
+                raise HTTPException(422, str(e))
         return {"ok": True}
 
     @app.delete("/api/d/{coll}/{id}")

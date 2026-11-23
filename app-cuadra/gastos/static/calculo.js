@@ -26,8 +26,10 @@
     }
     return {saldo:(Number(x.saldo)||0)-out+inn};
   }
-  function cxcTotal(p){return sum(p.partidas)+(Number(p.deMovs)||0);}
-  function movilPend(movil){var t=0;(movil||[]).forEach(function(m){(m.cobros||[]).forEach(function(c){if(!c.pagado)t+=Number(c.monto)||0;});});return t;}
+  // 23 nov 2026 (Titular): una cuenta que se pasa de pagada queda en cero; el sobrante es de Titular, no saldo a favor de la persona.
+  function cxcTotal(p){return Math.max(0,sum(p.partidas)+(Number(p.deMovs)||0));}
+  // 23 nov 2026: +Móvil es solo una lista de chequeo; lo que debe cada quien vive en Cuentas por cobrar (no se cuenta dos veces).
+  function movilPend(movil){return 0;}
   // movimientos desde la lectura más vieja de los saldos (lo que la página llama S.since)
   function sinceDe(saldos,movs){
     var min=null;(saldos||[]).forEach(function(x){var d=String(x.desde||'').slice(0,10);if(d&&(!min||d<min))min=d;});

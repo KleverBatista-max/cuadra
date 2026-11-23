@@ -231,15 +231,8 @@ def cruzar_cobro(db, yid, y, log):
             avisar(db, f"Yappy de {y['quien']} por ${valor:.2f} el {y['fecha']} coincide con {len(cands)} compras; márcalo a mano.")
             return
     nombre = norm(y["comercio"])
-    # 2) +Móvil
-    for m in sorted(db.all("movil"), key=lambda x: x["id"]):
-        cobros = m.get("cobros") or []
-        for c in cobros:
-            if not c.get("pagado") and c.get("alias") and norm(c["alias"]) == nombre and abs(float(c["monto"]) - valor) < 0.005:
-                c["pagado"] = True
-                db.merge("movil", m["id"], {"cobros": cobros})
-                log.append(f"+Móvil {m['id']}: pagó {c['nombre']}")
-                return
+    # 2) (23 nov 2026) +Móvil ya no se cruza con Yappys: es una lista de chequeo; lo que cada quien debe del plan es una deuda
+    #    normal en Cuentas por cobrar (`cargar_movil`) y el Yappy entra aquí abajo como abono, igual que cualquier otro.
     # 3) abono en la casilla de movimientos (no toca la nota)
     if not marca_cxc:
         return
@@ -259,6 +252,38 @@ def cruzar_cobro(db, yid, y, log):
 
 
 # ---------------- +Móvil ----------------
+MESES_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
+
+
+def cargar_movil(db, mes, mov_id=None):
+    """Pasa lo que debe cada línea del mes a Cuentas por cobrar (23 nov 2026, idea de Titular): una deuda normal por persona
+    («Laura debe: +Móvil diciembre»), igual que `asistente debe`; con `mov_id` queda ligada al cargo del banco. No incluye la
+    línea de Titular ni las ya marcadas pagadas, y no repite: guarda en `cargados` qué línea ya pasó. El checklist de +Móvil no
+    cambia. Personas que no existen en Por cobrar (Buki, Ñeñe) se crean."""
+    from .asistente import Asistente, ErrorAsistente
+    m = db.get("movil", mes)
+    if not m:
+        raise ErrorAsistente(f"No existe el mes {mes} de +Móvil.")
+    a = Asistente(db)
+    cargados = dict(m.get("cargados") or {})
+    nombre_mes = MESES_ES[int(mes[5:7]) - 1]
+    hechos = []
+    for c in m.get("cobros") or []:
+        n = c.get("nombre") or ""
+        if not n or n == "Titular" or c.get("pagado") or n in cargados:
+            continue
+        try:
+            p = a.persona(n)
+        except ErrorAsistente:
+            a.persona_nueva(n, c.get("alias") or "")
+            p = a.persona(n)
+        _, mid, _ = a.debe(p["id"], c["monto"], f"+Móvil {nombre_mes}", mov=mov_id)
+        cargados[n] = mid
+        hechos.append(n)
+    db.merge("movil", mes, {"cargados": cargados})
+    return hechos
+
+
 def asegurar_mes_movil(db, mes, vence=None):
     if db.exists("movil", mes):
         if vence:
@@ -270,7 +295,8 @@ def asegurar_mes_movil(db, mes, vence=None):
     if not previos:
         avisar(db, f"No hay mes anterior de +Móvil para copiar las líneas de {mes}.")
         return False
-    cobros = [{**c, "pagado": False} for c in previos[-1].get("cobros", [])]
+    # la línea de Titular (la que él mismo paga) nace «pagada»: cuenta para la ganancia pero no es por cobrar
+    cobros = [{**c, "pagado": c.get("nombre") == "Titular"} for c in previos[-1].get("cobros", [])]
     db.set("movil", mes, {"mes": mes, "vence": vence or "", "cobros": cobros})
     return True
 

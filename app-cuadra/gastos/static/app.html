@@ -757,8 +757,8 @@ button.divx:active{background:var(--paper)}
         b.addEventListener('click',async function(){if(!S.canWrite||!S.db)return;var cs=(m.cobros||[]).map(function(x){return Object.assign({},x);});cs[i].pagado=!cs[i].pagado;try{await S.db.doc('movil/'+m.id).update({cobros:cs});}catch(e){}});
         host.appendChild(b);
       });
-      var pm=(m.cobros||[]).reduce(function(t,c){return t+(c.pagado?0:Number(c.monto)||0);},0);
-      var tr=el('div','kv tot');tr.appendChild(el('span',null,'Total por cobrar'));tr.appendChild(el('span','num',money(pm)));host.appendChild(tr);
+      var np=(m.cobros||[]).filter(function(c){return c.pagado;}).length;
+      host.appendChild(el('div','hint','Lista de chequeo: '+np+' de '+(m.cobros||[]).length+' marcadas como pagadas. Lo que debe cada quien está en Por cobrar.'));
       var cg=(m.costoMov&&m.costo&&S.canWrite&&!S.vista)?m.costo:null;
       var tl=(m.cobros||[]).reduce(function(t,c){return t+(Number(c.monto)||0);},0);
       if(cg){
@@ -797,7 +797,7 @@ button.divx:active{background:var(--paper)}
       var cobros=v.lineas.split('\n').map(function(l){return l.trim();}).filter(Boolean).map(function(l){
         var p=l.split(',').map(function(x){return x.trim();});var n=parseFloat(String(p[1]||'').replace(/[^0-9.]/g,''));
         if(!p[0]||isNaN(n))throw new Error('Revisa la línea: '+l);
-        return {nombre:p[0],monto:n,alias:p[2]||'',pagado:!!viejos[p[0]]};
+        return {nombre:p[0],monto:n,alias:p[2]||'',pagado:!!viejos[p[0]]||p[0]==='Titular'};
       });
       var data={mes:S.month,vence:v.vence||'',cobros:cobros};
       if(m)await S.db.doc('movil/'+m.id).update(data);else await S.db.collection('movil').doc(S.month).set(data);
