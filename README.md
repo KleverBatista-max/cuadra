@@ -8,6 +8,10 @@
 
 Corre en un servidor propio y pequeño (una Raspberry Pi o un VPS de 1 GB), sin servicios de terceros para tus datos y sin IA en el proceso.
 
+<p align="center"><img src="docs/cuadra-movil.png" alt="Cuadra en el celular: inicio, tarjetas, cuentas, movimientos y por cobrar" width="100%"></p>
+
+<p align="center"><sub>Capturas con datos de demostración inventados.</sub></p>
+
 ---
 
 ## Funciones
