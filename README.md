@@ -66,7 +66,7 @@ Cuadra es una sola página que se instala como app en el teléfono. Abajo hay ci
 - Tres botones: **Dividir** (repartirlo entre varias personas), **Subir factura** (foto o PDF) y el ícono del **QR**.
 </td></tr>
 <tr>
-<td width="230" valign="top"><img src="docs/pantalla-07-escanear-qr.png" alt="Escanear el QR de una factura" width="230"></td>
+<td width="230" valign="top"><img src="docs/pantalla-07-escanear-qr.png" alt="Escanear el QR de una factura" width="230"><br><img src="docs/pantalla-08-factura-guardada.png" alt="La compra queda con Factura lista" width="230"></td>
 <td valign="top">
 
 ### Escanear el QR de una factura
@@ -83,6 +83,8 @@ Cuadra es una sola página que se instala como app en el teléfono. Abajo hay ci
 - Escribes el nombre de cada persona con quien dividiste y se agrega. El monto se reparte en partes iguales.
 - Tocas un monto para cambiarlo y el resto se reparte solo.
 - Cada parte queda como deuda de esa persona y tu parte sigue siendo un gasto tuyo, así que nada se cuenta doble.
+
+<img src="docs/flujo-dividir.png" alt="Dividir una cuenta entre tres y ver el resultado en Por cobrar" width="420">
 </td></tr>
 <tr>
 <td width="230" valign="top"><img src="docs/pantalla-10-por-cobrar-despues.png" alt="Por cobrar" width="230"></td>
@@ -125,6 +127,9 @@ La idea es simple: tener todas tus facturas a mano y un control de lo que gastas
 4. **Si hay una sola candidata, la pega.** Si hay varias, el parecido entre el nombre del emisor y el del comercio desempata. Si aun así no se decide, no adivina: lo deja en «Por revisar» para que lo elijas tú.
 5. **Si la compra todavía no llegó del banco**, la factura espera hasta 7 días. A las 24 horas ya se archiva en Google Drive con el nombre `fecha_comercio_monto`, en una carpeta por persona y año, así que cada quien tiene sus facturas listas para su propia declaración.
 6. **Una factura nunca crea un movimiento.** Los saldos solo los mueven transacciones reales. Si el total de la factura no coincide con el del movimiento, se anota en el movimiento. Y una misma factura (el mismo CUFE) no se guarda dos veces.
+
+<p align="center"><img src="docs/flujo-factura.png" alt="Abrir la compra, escanear el QR y ver la compra con Factura lista" width="100%"></p>
+<p align="center"><sub>De izquierda a derecha: se abre la compra, se escanea el QR de la factura y la compra queda con «Factura lista».</sub></p>
 
 ## Funciones
 
