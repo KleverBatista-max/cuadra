@@ -502,7 +502,22 @@ def banesco_transito(pg, nombre):
 def banco_banesco(page, env):
     pg = page  # directo a la banca digital (la portada www.banesco.com.pa a veces pone un reto de Cloudflare)
     pg.goto("https://bancadigital.banesco.com.pa/", wait_until="domcontentloaded", timeout=60000)
-    esperar(pg); dbg(pg, "banesco", "login")
+    esperar(pg)
+    # Cloudflare a veces pone «Just a moment...» (23 nov 2026): se espera a que lo resuelva solo y, si no, se recarga (hasta 4 veces)
+    for intento in range(4):
+        for _ in range(12):
+            try:
+                if "moment" not in (pg.title() or "").lower() and "un momento" not in (pg.title() or "").lower():
+                    break
+            except Exception:
+                pass
+            pg.wait_for_timeout(5000)
+        else:
+            print("  Banesco: Cloudflare sigue pidiendo reto; recargo (%d)" % (intento + 1))
+            pg.reload(wait_until="domcontentloaded", timeout=60000); esperar(pg)
+            continue
+        break
+    dbg(pg, "banesco", "login")
     llenar(pg, ["Usuario", "User"], env["BANESCO_USER"]); clic_texto(pg, ["Continue", "Continuar"]); esperar(pg, 2500)
     llenar(pg, ["Contraseña", "Password"], env["BANESCO_PASS"]); clic_texto(pg, ["Continue", "Continuar"])
     pg.wait_for_url("**/desktop*", timeout=180000); esperar(pg, 4000)
