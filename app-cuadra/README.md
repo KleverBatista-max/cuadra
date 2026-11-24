@@ -1,7 +1,7 @@
 # Cuadra
 
 App personal de finanzas que **se cuadra sola** contra los bancos panameños: lee los avisos del correo (Yappy, BAC,
-Banesco, Global, Banco General), la banca en línea (lector de bancos aparte) y la nota "Cuentas x Cobrar" del iPhone,
+Banesco, Global, Banco General), la banca en línea (lector de bancos aparte),
 y muestra tarjetas, cuentas, movimientos, cuentas por cobrar y facturas (DGI).
 
 - **Empieza por [`CLAUDE.md`](CLAUDE.md)** (reglas, pruebas, cómo cambiar algo) y **[`MANUAL.md`](MANUAL.md)** (todo el sistema).
