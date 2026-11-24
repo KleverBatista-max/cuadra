@@ -48,7 +48,7 @@ with sync_playwright() as p:
 
     def dgi(route):
         c.request.patch(f"{a.url}/api/d/movs/d99", data={"factura": "Recibida"})
-        route.fulfill(status=200, content_type="application/json", body=json.dumps({"estado": "OK", "emisor": "Supermercado Rey", "total": 42.75}))
+        route.fulfill(status=200, content_type="application/json", body=json.dumps({"estado": "OK", "emisor": "Supermercado Central", "total": 42.75}))
     pg.route("**/api/dgi/qr", dgi)
     pg.evaluate(JS)
 
@@ -76,7 +76,7 @@ with sync_playwright() as p:
     espera(1200)
     # A. escanear la factura de una compra
     toca(pg.locator("nav >> text=Movimientos").first); espera(1300)
-    toca(pg.locator("button:visible:has-text('Supermercado Rey'):has-text('42.75')").first); espera(1500)
+    toca(pg.locator("button:visible:has-text('Supermercado Central'):has-text('42.75')").first); espera(1500)
     toca(pg.locator("#eQR"))
     pg.wait_for_selector("#qrOv.ok", timeout=15000); espera(900)
     pg.wait_for_function("document.body.innerText.includes('guardada en')", timeout=15000); espera(2600)

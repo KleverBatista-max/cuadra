@@ -24,7 +24,7 @@ def font(s):
     return ImageFont.load_default()
 # recibo (papel) 520x900
 R=Image.new("RGB",(520,900),(252,252,250)); d=ImageDraw.Draw(R)
-d.text((260,50),"SUPERMERCADO REY",fill=(30,30,30),font=font(26),anchor="mm")
+d.text((260,50),"SUPERMERCADO CENTRAL",fill=(30,30,30),font=font(26),anchor="mm")
 d.text((260,86),"RUC 0000000-0-000000",fill=(90,90,90),font=font(18),anchor="mm")
 y=130
 for n,m in [("Pan de molde","2.10"),("Leche entera 1L","1.85"),("Café molido","6.40"),("Frutas","8.75"),("Arroz 5 lb","4.20"),("Pollo","12.90"),("Jabón","3.15"),("Agua 6 pack","3.40")]:

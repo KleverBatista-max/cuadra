@@ -43,7 +43,7 @@ with sync_playwright() as p:
 
     def dgi(route):  # simula la respuesta de la DGI para el QR inventado
         c.request.patch(f"{a.url}/api/d/movs/d99", data={"factura": "Recibida"})
-        route.fulfill(status=200, content_type="application/json", body=json.dumps({"estado": "OK", "emisor": "Supermercado Rey", "total": 42.75}))
+        route.fulfill(status=200, content_type="application/json", body=json.dumps({"estado": "OK", "emisor": "Supermercado Central", "total": 42.75}))
     pg.route("**/api/dgi/qr", dgi)
 
     def foto(n):
@@ -59,7 +59,7 @@ with sync_playwright() as p:
     pestana("Movimientos"); foto("04-movimientos")
     pestana("Por cobrar"); foto("05-por-cobrar")
     pestana("Movimientos"); pg.wait_for_timeout(500)
-    pg.locator("button:visible:has-text('Supermercado Rey'):has-text('42.75')").first.click(); foto("06-editar-movimiento")
+    pg.locator("button:visible:has-text('Supermercado Central'):has-text('42.75')").first.click(); foto("06-editar-movimiento")
     pg.click("#eQR"); pg.wait_for_timeout(900); pg.screenshot(path=f"{a.salida}/07-escanear-qr.png")
     pg.wait_for_function("document.body.innerText.includes('guardada en')", timeout=15000)
     pg.wait_for_timeout(400); pg.screenshot(path=f"{a.salida}/08-factura-guardada.png")

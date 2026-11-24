@@ -4,7 +4,7 @@
 
 <h1 align="center">Cuadra</h1>
 
-**Todos tus bancos en una sola app.** Cuadra junta BAC, Banesco, Global Bank y Banco General (y tu Yappy) en una sola pantalla: saldos, tarjetas, movimientos y facturas, cuadrados solos contra lo que dice cada banco. En Panamá no existe una API para ver tus bancos juntos, así que Cuadra entra por ti a cada banca en línea, solo para leer, y te lo muestra todo unificado, junto con lo que otras personas te deben, sin que tengas que anotar nada a mano.
+**Todos tus bancos en una sola app.** Cuadra junta tus bancos de Panamá en una sola pantalla: saldos, tarjetas, movimientos y facturas, cuadrados solos contra lo que dice cada banco. En Panamá no existe una API para ver tus bancos juntos, así que Cuadra entra por ti a cada banca en línea, solo para leer, y te lo muestra todo unificado, junto con lo que otras personas te deben, sin que tengas que anotar nada a mano.
 
 Corre en un servidor propio y pequeño (una Raspberry Pi o un VPS de 1 GB), sin servicios de terceros para tus datos y sin IA en el proceso.
 
@@ -92,7 +92,7 @@ Cuadra es una sola página que se instala como app en el teléfono. Abajo hay ci
 
 ### Por cobrar
 - Cada persona con lo que te debe y el total arriba. Aquí se ve el resultado de la división de arriba.
-- Lo que debe cada una sale de los movimientos marcados a su nombre. Cuando paga (un Yappy recibido) o hace un abono, la deuda baja sola.
+- Lo que debe cada una sale de los movimientos marcados a su nombre. Cuando paga o hace un abono, la deuda baja sola.
 - **Agregar persona** crea a alguien nuevo.
 </td></tr>
 <tr>
@@ -135,12 +135,12 @@ La idea es simple: tener todas tus facturas a mano y un control de lo que gastas
 
 | | |
 |---|---|
-| **Todos tus bancos en un solo lugar** | BAC, Banesco, Global Bank y Banco General en una sola pantalla. Un solo Neto (liquidez + por cobrar − tarjetas) en vez de cuatro portales distintos. |
-| **Movimientos al instante** | Cada aviso de compra que llega al correo (BAC, Banesco, Global Bank, Banco General, Yappy) se registra en menos de 5 minutos. |
+| **Todos tus bancos en un solo lugar** | Las cuentas y tarjetas de todos tus bancos en una sola pantalla. Un solo Neto (liquidez + por cobrar − tarjetas) en vez de un portal por banco. |
+| **Movimientos al instante** | Cada aviso de compra que llega al correo de tus bancos y de tus pagos móviles se registra en menos de 5 minutos. |
 | **Conciliación diaria con el banco** | Un lector entra a la banca en línea una vez al día, confirma saldos y movimientos y detecta compras **en tránsito**. Lo que no cuadra se marca para revisión. |
 | **Tarjetas de crédito** | Saldo, disponible, fechas de corte y de pago, pago mínimo y pago de contado, con aviso de los pagos próximos. |
-| **Tarjetas adicionales** | Las compras de cada adicional se asignan a su titular y se suman a lo que debe; sus pagos por Yappy se descuentan solos. Cada persona tiene su propio acceso y solo ve lo suyo. |
-| **Cuentas por cobrar** | Cada compra que usó otra persona queda a su nombre. Sus pagos (por ejemplo un Yappy) y los abonos bajan la deuda. Una cuenta se puede dividir entre varias personas. |
+| **Tarjetas adicionales** | Las compras de cada adicional se asignan a su titular y se suman a lo que debe; sus pagos se descuentan solos. Cada persona tiene su propio acceso y solo ve lo suyo. |
+| **Cuentas por cobrar** | Cada compra que usó otra persona queda a su nombre. Sus pagos (por ejemplo una transferencia) y los abonos bajan la deuda. Una cuenta se puede dividir entre varias personas. |
 | **Facturas** | Por PDF, foto o código QR de la DGI de Panamá; se emparejan con su movimiento (mismo monto, ±3 días) y se archivan en Google Drive, listas para la declaración de renta. Ver [Las facturas](#las-facturas-por-qué-importan-y-cómo-se-pegan). |
 | **Respaldos** | Copia diaria completa en Google Drive y del código en Git. Una máquina nueva se monta con un solo comando. |
 
@@ -149,8 +149,8 @@ La idea es simple: tener todas tus facturas a mano y un control de lo que gastas
 ```mermaid
 flowchart LR
     subgraph Fuentes
-        A[Avisos por correo<br/>bancos, Yappy, facturas]
-        B[Banca en línea<br/>Global, BAC, BG, Banesco]
+        A[Avisos por correo<br/>bancos, pagos, facturas]
+        B[Banca en línea<br/>de cada banco]
     end
     subgraph Servidor
         W[Worker<br/>cada 5 min]
@@ -190,7 +190,7 @@ lector-bancos/
 app-cuadra/
   gastos/worker.py       Revisión periódica del correo y de la carpeta de entrada
   gastos/reglas.py       Reglas: adicionales, cobros, flotantes, conciliación
-  gastos/parsers.py      Avisos de cada banco y Yappy
+  gastos/parsers.py      Avisos de cada banco y de tus pagos
   gastos/facturas*.py    Facturas por PDF, foto y QR de la DGI
   gastos/web.py          API y autenticación (FastAPI)
   gastos/static/calculo.js  Cálculo de saldos, liquidez y fechas: UNA copia, usada por la página y por el servidor (vía node)
