@@ -21,43 +21,26 @@ from .util import ahora_panama, limpiar_comercio
 
 def procesar_correos(cfg, db, correos, log, gmail=None):
     """Aplica una lista de Correo. Separado de IMAP para poder probarlo."""
-    notas = []
     for c in correos:
         acciones = leer(c)
         ok = True
         propio = False
-        es_nota = False
         for tipo, dato in acciones:
             if tipo == "mov":
                 reglas.aplicar_mov(db, dict(dato), log)
             elif tipo == "pi_bancos":
                 propio = True
                 reglas.aplicar_bancos(db, dato, c.local.strftime("%Y-%m-%dT%H:%M"), log)
-            elif tipo == "nota_cxc":
-                propio = True
-                notas.append((c, dato))
-                es_nota = True
             elif tipo == "factura_correo":
                 reglas.aplicar_factura_correo(db, dato, log)
             elif tipo == "error":
                 ok = False
                 reglas.avisar(db, f"No pude leer un correo de {c.remitente} ({c.asunto}, {c.local:%d/%m %H:%M}): {dato}.",
                               clave="err-" + c.msgid)
-            elif tipo == "ignorar" and "nota vacía" in str(dato):
-                ok = False  # no se procesa ni se borra; puede llegar otra con datos
-        if ok and not es_nota:
+        if ok:
             db.marcar_procesado(c.msgid, ",".join(a[0] for a in acciones))
             if propio and gmail and cfg.borrar_correos_raspberry:
                 gmail.a_papelera(c.msgid)
-    # De las notas, solo cuenta la más reciente
-    if notas:
-        notas.sort(key=lambda x: x[0].fecha)
-        ultima, texto = notas[-1]
-        if reglas.aplicar_nota(db, texto, ultima.local.strftime("%Y-%m-%d"), log):
-            for c, _ in notas:
-                db.marcar_procesado(c.msgid, "nota_cxc")
-                if gmail and cfg.borrar_correos_raspberry:
-                    gmail.a_papelera(c.msgid)
 
 
 def destino_factura(a, mov):
@@ -147,11 +130,6 @@ def correr(cfg):
             try:
                 correos = g.recientes(cfg.dias_atras, db.ya_procesado)
                 procesar_correos(cfg, db, correos, log, gmail=g)
-                try:  # nota "Cuentas x Cobrar" directo de la carpeta Notes de Gmail (solo si cambió)
-                    from . import notas_gmail
-                    notas_gmail.revisar(db, g, log)
-                except Exception as e:
-                    log.append(f"Nota en Notes: no se pudo leer ({type(e).__name__}: {e})")
             finally:
                 g.cerrar()
         # Archivos de bancos dejados en la carpeta "entrada" (por si el lector de bancos corre aquí mismo)
@@ -164,11 +142,6 @@ def correr(cfg):
                         data = json.load(fh)
                     reglas.aplicar_bancos(db, data, ahora_panama().strftime("%Y-%m-%dT%H:%M"), log)
                     os.remove(p)  # ya aplicado: no se guardan archivos diarios
-        try:  # nota "Cuentas x Cobrar" que el lector de iCloud dejó en entrada/ (solo si cambió)
-            from . import notas_gmail
-            notas_gmail.revisar_archivo(cfg, db, log)
-        except Exception as e:
-            log.append(f"Nota de iCloud: no se pudo aplicar ({type(e).__name__}: {e})")
         try:  # facturas por QR de la DGI que quedaron en espera (reintentos: 2 h, 1, 3 y 7 días, y fin de mes)
             from . import facturas_dgi
             facturas_dgi.procesar_vencidos(cfg, db, log)

@@ -113,6 +113,10 @@ El problema es la acumulación. Un año son cientos de compras, en varios bancos
 
 **Cómo es una factura en Panamá.** La factura electrónica trae un QR (en el comprobante impreso, el CAFE) y un código único, el **CUFE**. La DGI deja consultarla en su portal con cualquiera de los dos ([preguntas frecuentes](https://dgi.mef.gob.pa/_7facturaelectronica/fpreguntas)). En ventas a consumidor final, el emisor puede mandarla al PAC al final del día, así que a veces la DGI tarda en tenerla.
 
+**¿A nombre de quién?** No importa. La factura puede salir a nombre del contribuyente o sin nombre (consumidor final) y Cuadra la pega igual, porque no la busca por el nombre del comprador sino por el monto, la fecha y el comercio.
+
+La idea es simple: tener todas tus facturas a mano y un control de lo que gastas. Así, cuando llega marzo, el trabajo de reunir comprobantes ya está hecho y solo falta declarar (con un contador, si hace falta).
+
 **Cómo las pega Cuadra.**
 
 1. **Escaneas el QR**, desde el movimiento o desde Inicio sin elegir ninguno. Cuadra va a la DGI con ese código y baja el PDF y los datos: emisor, RUC, número, fecha, total e ITBMS.
@@ -187,6 +191,8 @@ app-cuadra/
   gastos/resumen.py      Resumen (Neto, tarjetas, cuentas) para el asistente; solo da formato, el cálculo está en calculo.js
   gastos/static/         Interfaz (una sola página, instalable como app)
   deploy/                Servicios systemd y configuración de ejemplo
+
+demo/                    Datos inventados, capturas y videos de demostración (ver demo/README.md)
 ```
 
 ## Instalación

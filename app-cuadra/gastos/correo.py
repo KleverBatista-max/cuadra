@@ -92,8 +92,8 @@ class Gmail:
         de = " OR ".join(f"from:{r}" for r in REMITENTES_BANCO)
         consultas = [
             (self.todos, f"newer_than:{dias}d ({de})"),
-            (self.todos, f"newer_than:{dias}d (subject:PI-BANCOS OR subject:(Cuentas x Cobrar) OR subject:(Copia de nota))"),
-            (self.papelera, f"newer_than:{dias}d (subject:PI-BANCOS OR subject:(Cuentas x Cobrar))"),
+            (self.todos, f"newer_than:{dias}d (subject:PI-BANCOS)"),
+            (self.papelera, f"newer_than:{dias}d (subject:PI-BANCOS)"),
             (self.todos, f"newer_than:{max(dias, 10)}d (subject:factura OR subject:comprobante OR subject:recibo) -from:cwpanama.com"),
         ]
         vistos, out = set(), []

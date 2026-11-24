@@ -121,14 +121,14 @@ def saldo_cxc(items, base=0.0):
     """Lo que la persona debe por sus movimientos, en orden de fecha (23 nov 2026, decisión de Titular): si un abono se pasa de lo que
     debía, el sobrante es de Titular y se descarta en ese momento (la cuenta queda en 0, sin saldo a favor); una deuda nueva después
     empieza desde cero. En la misma fecha las deudas cuentan antes que los abonos, para que un pago del mismo día no se pierda."""
-    saldo = float(base)   # `base` = lo que ya dice la nota del iPhone (casilla 1): los abonos también se le restan
+    saldo = float(base)   # `base` = lo que ya traen las partidas (casilla 1): los abonos también se le restan
     for x in sorted(items, key=lambda x: (x["fecha"] or "", 0 if x["monto"] > 0 else 1, x["mov"])):
         saldo = max(0.0, round(saldo + x["monto"], 2))
     return round(saldo, 2)
 
 
 def recalcular_cxc(db):
-    """Casilla 2 de cada persona: suma de los movimientos marcados (mov.cxc). No toca las partidas de la nota."""
+    """Casilla 2 de cada persona: suma de los movimientos marcados (mov.cxc). No toca las partidas."""
     from . import divisiones   # las partes de las transacciones divididas se igualan primero (ver divisiones.py)
     divisiones.sincronizar(db, avisar)
     por = {}
@@ -215,7 +215,7 @@ def aplicar_mov(db, mov, log):
 
 def cruzar_cobro(db, yid, y, log):
     """Yappy recibido -> reembolso de adicional o abono en la casilla de movimientos de la persona.
-    Nunca toca las partidas de la nota. Titular puede cambiar la marca en el movimiento."""
+    Nunca toca las partidas. Titular puede cambiar la marca en el movimiento."""
     valor = round(float(y["monto"]), 2)
     # la casilla de movimientos solo cuenta desde CXC_MOVS_DESDE; los reembolsos funcionan siempre (14 nov)
     marca_cxc = C.CXC_AUTOMATICA and (y.get("fecha") or "") >= C.CXC_MOVS_DESDE
@@ -890,95 +890,6 @@ def emparejar_transito(movs, transito):
                 libres.remove(cands[0][2])
                 hechos.add(d["id"])
     return hechos
-
-
-# ---------------- Nota "Cuentas x Cobrar" ----------------
-_NUM = re.compile(r"^\$?-?[\d,]+(?:\.\d+)?\$?$")  # 100 / 1,000.00 / $3 / 3$
-
-
-BORRAR_MAX = 3  # personas que la nota puede borrar de una sola vez
-
-
-def leer_nota(texto):
-    """Devuelve {nombre: [montos]} del bloque 'Nombre Monto'. Ignora todo lo demás."""
-    lineas = [l.replace("\ufffc", "").replace("\u00a0", " ").strip() for l in texto.splitlines()]
-    try:
-        i = next(k for k, l in enumerate(lineas) if norm(l) == "nombre monto")
-    except StopIteration:
-        return None
-    out = {}
-    for l in lineas[i + 1:]:
-        if not l:
-            continue
-        if norm(l).startswith("fecha monto") or norm(l).startswith("dinero"):
-            break
-        partes = l.split()
-        nombre, montos = [], []
-        for p in partes:
-            if _NUM.match(p) and nombre:
-                montos.append(round(float(p.replace("$", "").replace(",", "")), 2))
-            elif not montos:
-                nombre.append(p)
-            else:
-                break  # texto después de los montos = etiqueta de la sección siguiente
-        if nombre and montos:
-            out[" ".join(nombre)] = montos
-        if montos and len(partes) > len(nombre) + len(montos):
-            resto = " ".join(partes[len(nombre) + len(montos):])
-            if norm(resto).startswith("dinero"):
-                break
-    return out
-
-
-def aplicar_nota(db, texto, hoy, log):
-    if not C.NOTA_IPHONE:   # en pausa (18 nov 2026): se da por leída y no se toca nada
-        log.append("Nota del iPhone en pausa: no se aplica")
-        return True
-    bloque = leer_nota(texto)
-    if not bloque:
-        avisar(db, "Llegó la nota de Cuentas x Cobrar pero no encontré el bloque 'Nombre Monto'.", clave="nota-" + hoy)
-        return False
-    actuales = db.all("cxc")
-    ayer = (fecha_de(hoy) - timedelta(days=1)).isoformat()
-    vistos = set()
-    for nombre, montos in bloque.items():
-        n = norm(nombre)
-        p = next((x for x in actuales if norm(x.get("nombre")) == n or (x.get("alias") and norm(x["alias"]) == n)), None)
-        if p is None:
-            pid = re.sub(r"[^a-z0-9]+", "-", n).strip("-") or "persona"
-            db.set("cxc", pid, {"nombre": nombre, "partidas": montos, "alias": "", "nota": "", "origen": "nota"})
-            log.append(f"CxC nueva: {nombre} {montos}")
-            vistos.add(pid)
-            continue
-        vistos.add(p["id"])
-        if p.get("origen") != "nota":  # esta en la nota: desde ahora la nota manda sobre esta persona
-            db.merge("cxc", p["id"], {"origen": "nota"})
-        # no reponer una partida cobrada ayer u hoy (la nota puede ir atrasada)
-        cobradas = re.findall(r"Cobrado \$([\d.]+) el (\d{4}-\d{2}-\d{2})", p.get("nota") or "")
-        recientes = [round(float(v), 2) for v, f in cobradas if f in (hoy, ayer)]
-        nuevas = list(montos)
-        for v in recientes:
-            if v in nuevas and v not in (p.get("partidas") or []):
-                nuevas.remove(v)
-        if sorted(nuevas) != sorted([round(float(x), 2) for x in (p.get("partidas") or [])]):
-            db.merge("cxc", p["id"], {"partidas": nuevas})
-            log.append(f"CxC {p['nombre']}: {p.get('partidas')} -> {nuevas}")
-    faltan = [x for x in actuales if x["id"] not in vistos]
-    borrar = [x for x in faltan if x.get("origen") == "nota"]
-    if len(borrar) > BORRAR_MAX:  # demasiados de golpe: puede ser una nota mal leida; no borrar nada
-        avisar(db, f"Tu nota ya no tiene a {len(borrar)} personas ({', '.join(x['nombre'] for x in borrar)}). "
-                   "Son muchas a la vez y no borré ninguna: bórralas a mano si es correcto.",
-               clave="nota-muchos-" + "-".join(sorted(x["id"] for x in borrar)))
-        borrar = []
-    for x in borrar:
-        db.delete("cxc", x["id"])
-        log.append(f"CxC borrada (ya no está en la nota): {x['nombre']} {x.get('partidas')}")
-    for x in faltan:
-        if x not in borrar and sum(x.get("partidas") or []) > 0:
-            avisar(db, f"{x['nombre']} está en la app con ${sum(x['partidas']):.2f} pero ya no aparece en tu nota.",
-                   clave=f"nota-falta-{x['id']}-{sum(x['partidas'])}")
-    recalcular_cxc(db)   # la casilla 2 depende de lo que diga la nota (los abonos no bajan de 0)
-    return True
 
 
 # ---------------- Facturas que llegan por correo ----------------

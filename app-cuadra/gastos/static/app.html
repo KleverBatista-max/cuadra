@@ -425,12 +425,6 @@ button.divx:active{background:var(--paper)}
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="atajoCrear" type="button">Crear llave del Atajo</button><button class="btn" id="atajoBorrar" type="button" hidden>Desactivar</button></div>
       <div class="f" id="atajoMostrar" hidden><label for="atajoLlave">Tu llave (se muestra solo ahora; cópiala al Atajo)</label><input type="text" id="atajoLlave" readonly><button class="btn" id="atajoCopiar" type="button">Copiar</button></div>
     </div>
-    <div class="box" id="conexBox" hidden><h2>Código de verificación</h2>
-      <div class="hint">Te llegó un código por mensaje para la nota de iCloud. Escríbelo aquí.</div>
-      <div class="form" style="grid-template-columns:1fr"><div class="f"><label for="icwCod">Código de 6 dígitos</label><input type="text" id="icwCod" inputmode="numeric" autocomplete="one-time-code" maxlength="7"></div></div>
-      <button class="btn primary" id="icwCodBtn" type="button">Enviar código</button>
-      <div class="hint" id="icwRes" role="status"></div>
-    </div>
     <div class="box"><h2>Respaldo</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="bk" type="button">Descargar respaldo</button><button class="btn" id="imp" type="button">Importar respaldo</button><input type="file" id="impFile" accept="application/json" hidden></div>
       <div class="hint">Cada noche se guarda solo una copia en tu Google Drive.</div>
@@ -667,7 +661,7 @@ button.divx:active{background:var(--paper)}
     });
     $('saldosSum').textContent='Saldos'+(list.length?' · '+money(tot)+' en cuentas':'');
   }
-  // Por cobrar (18 nov 2026): solo movimientos marcados «me debe»/«me abonó» (deMovs). partidas quedó vacío (nota en pausa).
+  // Por cobrar (18 nov 2026): solo movimientos marcados «me debe»/«me abonó» (deMovs). partidas queda vacío.
   function cxcTotal(p){return Calculo.cxcTotal(p);}
   function renderCxc(){
     var host=$('cxc');host.textContent='';var tot=0;
@@ -1641,22 +1635,6 @@ button.divx:active{background:var(--paper)}
     renderDetalle();
   }
   window.addEventListener('hashchange',ruta);
-  // ---- Configuración: el campo del código aparece solo cuando Apple lo pide (lector de la nota de iCloud)
-  async function conexEstado(){
-    if(S.vista||!window.__api)return;
-    try{var r=await window.__api('GET','/api/conexiones');var ie=r.icloud_web_estado||{};
-      $('conexBox').hidden=ie.estado!=='codigo';
-    }catch(e){}
-  }
-  $('icwCodBtn').addEventListener('click',async function(){
-    var b=this,res=$('icwRes');b.disabled=true;
-    try{var r=await window.__api('POST','/api/conexiones/codigo',{codigo:$('icwCod').value});$('icwCod').value='';res.textContent='Código enviado. Listo.';}
-    catch(e){var t=(e&&e.message)||'';try{t=JSON.parse(t).detail||t;}catch(x){}res.textContent='No se pudo enviar. '+t;}
-    b.disabled=false;
-  });
-  window.addEventListener('hashchange',function(){if(R.scr==='mas')conexEstado();});
-  setInterval(function(){if(R.scr==='mas'&&!document.hidden)conexEstado();},5000);
-  if(location.hash==='#mas')setTimeout(conexEstado,1500);
   document.addEventListener('click',function(e){var v=e.target.closest('[data-volver]');if(v){e.preventDefault();if(history.length>1)history.back();else location.hash='#inicio';}});
   document.addEventListener('click',function(e){if(!e.target.closest('.tc'))document.querySelectorAll('.tc.abierta').forEach(function(o){o.classList.remove('abierta');});});
   $('carrusel').addEventListener('scroll',function(){window.requestAnimationFrame(marcarDot);},{passive:true});
@@ -1667,7 +1645,7 @@ button.divx:active{background:var(--paper)}
     $('clientesBox').classList.remove('box');$('clientesBox').querySelector('h2').style.display='none';
     var cab=document.querySelector('.cab');cab.insertBefore($('engr'),cab.querySelector('.cab-der'));
     $('chipsDir').style.display='none';
-    $('saldos').parentNode.style.display='none';$('pagosBox').style.display='none';$('conexBox').style.display='none';$('bk').parentNode.parentNode.style.display='none';
+    $('saldos').parentNode.style.display='none';$('pagosBox').style.display='none';$('bk').parentNode.parentNode.style.display='none';
     document.querySelector('#s-mas .volver h2').textContent='Ajustes';$('engr').setAttribute('aria-label','Ajustes');
     atajoEstado();
   }

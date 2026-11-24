@@ -54,7 +54,7 @@ NOMBRES_PERSONA = {
     "beatriz demo": "Beatriz",
 }
 
-# Remitentes válidos para los correos de la Raspberry y la nota del iPhone
+# Remitentes válidos para los correos de la Raspberry
 REMITENTES_PROPIOS = {
     "titular@example.com",
     "titular@example.net",
@@ -113,12 +113,9 @@ def cargar(path=None):
 
 
 # Cuentas por cobrar en DOS casillas (pedido de Titular, 14 nov 2026):
-#  1) "partidas": lo de la nota del iPhone. Solo la nota (y Titular a mano) la cambian; la app nunca la toca sola.
+#  1) "partidas": saldos anteriores anotados a mano; la app nunca los toca sola.
 #  2) movimientos marcados con mov["cxc"] = {"id": persona, "signo": 1 (debe) / -1 (abonó)}. Las reglas los marcan
 #     solos (compras de adicionales, Yappy recibidos) y Titular cambia la marca en cada movimiento. Se suman en
 #     cxc["deMovs"] / cxc["detalleMovs"] (recalcular_cxc). Total de cada persona = partidas + deMovs.
 CXC_AUTOMATICA = True
-# Nota del iPhone EN PAUSA (Titular, 18 nov 2026): las partidas quedan congeladas como estaban y la app ya no las cambia
-# con la nota (iCloud, Gmail ni correo). Lo que cambia es solo por movimientos. Para volver a conectarla: True.
-NOTA_IPHONE = False
-CXC_MOVS_DESDE = "2026-11-14"   # lo anterior ya está en la nota de Titular
+CXC_MOVS_DESDE = "2026-11-14"   # lo anterior ya estaba anotado en las partidas

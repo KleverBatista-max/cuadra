@@ -7,12 +7,12 @@
 #   2. Saca este archivo del respaldo:   tar -xzf vps-proyecto-ultimo.tar.gz opt/bancos/restaurar.sh
 #   3. Córrelo:                          sudo bash opt/bancos/restaurar.sh vps-proyecto-ultimo.tar.gz
 #   4. Abre el enlace de Tailscale que aparece al final y entra con tu cuenta.
-#   5. Apaga el servidor viejo. La primera vez iCloud pedirá el código SMS (Cuadra → engranaje).
+#   5. Apaga el servidor viejo.
 #
 # No toca la configuración de SSH de la máquina nueva (para no dejarte afuera).
 #
 # MODO PRUEBA (14 nov 2026):  sudo bash restaurar.sh --prueba ARCHIVO.tar.gz
-#   Instala todo igual pero NO prende la revisión automática (Gmail), NO instala los horarios (bancos, iCloud, respaldo
+#   Instala todo igual pero NO prende la revisión automática (Gmail), NO instala los horarios (bancos, respaldo
 #   que pisaría el Drive y GitHub reales) y NO toca Tailscale. Sirve para probar una mudanza sin afectar al servidor real.
 set -euo pipefail
 PRUEBA=0
@@ -81,7 +81,7 @@ if [ -f "$X/cjk.db" ]; then
   install -m 600 "$X/cjk.db" /home/paquetes/datos/cjk.db
 fi
 chown -R paquetes:paquetes /home/paquetes; chmod 700 /home/paquetes/datos 2>/dev/null || true
-mkdir -p /root/icloud_debug /root/respaldos; chmod 700 /root/respaldos
+mkdir -p /root/respaldos; chmod 700 /root/respaldos
 
 echo "==> 4/8 App Cuadra (Python, tarda unos minutos)"
 rm -rf /home/gastos/gastos-app/venv
@@ -164,4 +164,3 @@ echo "  sudo -u gastos -H gastos probar-gmail"
 echo "  sudo -u gastos -H gastos probar-drive"
 echo "  Paquetes: https://mi-servidor...:8443  (sudo -u paquetes -H paquetes usuarios)"
 echo "  Página: $(tailscale serve status 2>/dev/null | grep -o 'https://[^ ]*' | head -1)"
-echo "iCloud pedirá el código SMS en la próxima revisión: escríbelo en Cuadra → engranaje."

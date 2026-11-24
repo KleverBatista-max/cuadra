@@ -8,7 +8,7 @@ Uso:
   python3 bancos.py --headless       # sin ventana (después de que todo funcione)
   python3 bancos.py --solo global --prueba   # prueba: sin correo, guarda texto+captura de cada paso en ~/bancos_out/debug
 
-Archivo credenciales.env.nosync en esta misma carpeta (".nosync" = iCloud no lo sube; no lo compartas):
+Archivo credenciales.env.nosync en esta misma carpeta (no lo compartas ni lo subas a ningún repositorio):
   GLOBAL_USER= GLOBAL_PASS= BAC_USER= BAC_PASS= BG_USER= BG_PASS= BANESCO_USER= BANESCO_PASS=
   GMAIL_USER=titular@example.com  GMAIL_APP_PASS=<contraseña de aplicación>
 Nunca hace clic en Pagar / Transferir / menús de configuración: solo lee.
@@ -36,7 +36,7 @@ CARPETA = Path(__file__).resolve().parent
 
 def cargar_env():
     # credenciales.env.nosync en la misma carpeta del script (antes estaba en ~/.bancos.env; se acepta igual)
-    f = CARPETA / "credenciales.env.nosync"  # .nosync: iCloud Drive no lo sube (el Escritorio se sincroniza)
+    f = CARPETA / "credenciales.env.nosync"
     if not f.exists():
         f = HOME / ".bancos.env"
     env = dict(os.environ)

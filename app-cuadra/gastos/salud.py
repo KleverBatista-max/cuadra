@@ -13,7 +13,7 @@ from .util import ahora_panama
 BANCOS = {"global-": "Global", "bac-": "BAC", "bg-": "Banco General", "banesco-": "Banesco"}
 HORAS_BANCO = 20          # se corre a las 10:00 y 18:30: más de 20 h sin leer = fallaron dos corridas seguidas
 VUELTAS_FALLA = 3         # un paso que falla 3 vueltas seguidas (15 min) avisa
-PASOS = ("Nota en Notes", "Nota de iCloud", "DGI", "Facturas sueltas")
+PASOS = ("DGI", "Facturas sueltas")
 DISCO_MAX = 0.85
 
 

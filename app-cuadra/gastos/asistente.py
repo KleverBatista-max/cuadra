@@ -345,7 +345,7 @@ def cli(cfg, args):
             print(f"Listo ({bid}): {doc['nombre']} agregada a Por cobrar (id {pid})")
         elif cmd == "cuenta":
             p = a.cuenta(" ".join(r))
-            print(f"{p.get('nombre') or p['id']}: movimientos ${p.get('deMovs', 0):.2f}; partidas de la nota {p.get('partidas')}")
+            print(f"{p.get('nombre') or p['id']}: movimientos ${p.get('deMovs', 0):.2f}; partidas {p.get('partidas')}")
             for d in p.get("detalleMovs") or []:
                 print(f"  {d['fecha']}  {d['monto']:>8.2f}  {d['comercio']}  ({d['mov']})")
         elif cmd == "bitacora":

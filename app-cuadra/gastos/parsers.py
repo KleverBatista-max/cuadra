@@ -4,7 +4,6 @@ Acciones posibles (tuplas):
   ("mov", {...})                 movimiento nuevo
   ("ignorar", motivo)            correo conocido que no genera nada
   ("pi_bancos", dict)            JSON del lector de bancos de la Raspberry
-  ("nota_cxc", texto)            nota "Cuentas x Cobrar" del iPhone
   ("factura_correo", {...})      correo que parece factura de un comercio
   ("error", motivo)              correo de un remitente conocido que no se pudo leer
 """
@@ -261,7 +260,7 @@ def bac_ach(c):
     return [("mov", mov)]
 
 
-# ---------------- Correos propios: PI-BANCOS y nota ----------------
+# ---------------- Correos propios: PI-BANCOS ----------------
 def propio(c):
     asunto = c.asunto or ""
     if not c.autenticado:
@@ -280,11 +279,6 @@ def propio(c):
             except Exception:
                 pass
         return [("error", "PI-BANCOS sin JSON")]
-    if "Cuentas x Cobrar" in asunto or "Copia de nota" in asunto:
-        cuerpo = c.cuerpo
-        if "Nombre Monto" not in cuerpo:
-            return [("ignorar", "nota vacía")]
-        return [("nota_cxc", cuerpo)]
     return None
 
 

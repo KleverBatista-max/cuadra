@@ -19,7 +19,6 @@ from . import drive, facturas
 from .db import DB
 from pydantic import BaseModel
 from . import facturas_dgi
-from . import conexiones
 from . import sueltas
 from . import divisiones
 from . import reglas
@@ -428,49 +427,6 @@ def crear_app(cfg=None):
         return {"estado": {"OK": "OK", "QUEUED": "ESPERA", "NEEDS_MANUAL": "MANUAL"}.get(f.get("estado"), "ERROR"),
                 "mensaje": f.get("mensaje"), "emisor": d.get("emisor"), "total": d.get("total"),
                 "proximo": f.get("proximo"), "pegada": (pegada or {}).get("comercio")}
-
-    class Conexion(BaseModel):
-        servicio: str
-        usuario: str
-        clave: str
-
-    @app.get("/api/conexiones")
-    def ver_conexiones(req: Request):
-        exigir(req, admin=True)
-        return conexiones.resumen(cfg)
-
-    @app.post("/api/conexiones")
-    def poner_conexion(b: Conexion, req: Request):
-        """Titular pone una clave desde la app; se guarda solo en el VPS y se prueba al momento."""
-        exigir(req, admin=True)
-        if b.servicio == "icloud_web":  # inicio de sesión normal en icloud.com (lo usa el lector de la nota)
-            if not b.usuario.strip() or not b.clave.strip():
-                raise HTTPException(422, "Escribe el correo y la contraseña")
-            conexiones.guardar(cfg, "icloud_web", {"usuario": b.usuario.strip(), "clave": b.clave,
-                                                   "guardada": time.strftime("%Y-%m-%d %H:%M"), "codigo": None})
-            conexiones.pedir_ahora(cfg)
-            return {"ok": True, "mensaje": "Guardado. Entrando a iCloud… si Apple pide un código, aparece aquí abajo."}
-        if b.servicio != "icloud":
-            raise HTTPException(422, "Servicio no soportado")
-        if not b.usuario.strip() or not b.clave.strip():
-            raise HTTPException(422, "Escribe el correo y la contraseña")
-        prueba = conexiones.probar_icloud(b.usuario, b.clave)
-        conexiones.guardar(cfg, "icloud", {"usuario": b.usuario.strip(), "clave": b.clave.strip(),
-                                           "guardada": time.strftime("%Y-%m-%d %H:%M"),
-                                           "prueba": {"ok": prueba.get("ok"), "mensaje": prueba.get("mensaje")}})
-        return prueba
-
-    class Codigo(BaseModel):
-        codigo: str
-
-    @app.post("/api/conexiones/codigo")
-    def poner_codigo(b: Codigo, req: Request):
-        exigir(req, admin=True)
-        cod = re.sub(r"\D", "", b.codigo or "")
-        if len(cod) != 6:
-            raise HTTPException(422, "El código tiene 6 dígitos")
-        conexiones.guardar(cfg, "icloud_web", {"codigo": cod, "codigo_ts": time.time()})
-        return {"ok": True, "mensaje": "Código enviado. Revisando…"}
 
     @app.get("/api/facturas/sueltas")
     def facturas_sueltas(req: Request):

@@ -272,10 +272,10 @@ def crear_servidor(cfg):
     @mcp.tool(annotations=L)
     @seguro
     def cuenta(persona: str) -> str:
-        """Muestra cuánto debe PERSONA (movimientos marcados + partidas de la nota) y el detalle."""
+        """Muestra cuánto debe PERSONA (movimientos marcados + partidas) y el detalle."""
         p = asis.cuenta(persona)
         det = "\n".join(f"  {d['fecha']}  {d['monto']:.2f}  {d['comercio']}  ({d['mov']})" for d in p.get("detalleMovs") or [])
-        return f"{p.get('nombre') or p['id']}: movimientos ${p.get('deMovs', 0):.2f}; partidas de la nota {p.get('partidas')}\n{det}"
+        return f"{p.get('nombre') or p['id']}: movimientos ${p.get('deMovs', 0):.2f}; partidas {p.get('partidas')}\n{det}"
 
     @mcp.tool(annotations=L)
     @seguro
