@@ -4,7 +4,7 @@
 
 <h1 align="center">Cuadra</h1>
 
-**Finanzas personales que se cuadran solas.** Cuadra lee tus bancos panameños, tus avisos por correo y tus facturas, y mantiene en una sola página tus saldos, tus gastos, tus tarjetas y lo que otras personas te deben, sin que tengas que anotar nada a mano.
+**Todos tus bancos en una sola app.** Cuadra junta BAC, Banesco, Global Bank y Banco General (y tu Yappy) en una sola pantalla: saldos, tarjetas, movimientos y facturas, cuadrados solos contra lo que dice cada banco. En Panamá no existe una API para ver tus bancos juntos, así que Cuadra entra por ti a cada banca en línea, solo para leer, y te lo muestra todo unificado, junto con lo que otras personas te deben, sin que tengas que anotar nada a mano.
 
 Corre en un servidor propio y pequeño (una Raspberry Pi o un VPS de 1 GB), sin servicios de terceros para tus datos y sin IA en el proceso.
 
@@ -135,6 +135,7 @@ La idea es simple: tener todas tus facturas a mano y un control de lo que gastas
 
 | | |
 |---|---|
+| **Todos tus bancos en un solo lugar** | BAC, Banesco, Global Bank y Banco General en una sola pantalla. Un solo Neto (liquidez + por cobrar − tarjetas) en vez de cuatro portales distintos. |
 | **Movimientos al instante** | Cada aviso de compra que llega al correo (BAC, Banesco, Global Bank, Banco General, Yappy) se registra en menos de 5 minutos. |
 | **Conciliación diaria con el banco** | Un lector entra a la banca en línea una vez al día, confirma saldos y movimientos y detecta compras **en tránsito**. Lo que no cuadra se marca para revisión. |
 | **Tarjetas de crédito** | Saldo, disponible, fechas de corte y de pago, pago mínimo y pago de contado, con aviso de los pagos próximos. |
