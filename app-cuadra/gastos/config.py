@@ -64,8 +64,6 @@ REMITENTES_PROPIOS = {
 # Fecha del corte en cero
 CORTE = "2026-11-11"
 
-# Cuenta +Móvil cuya factura abre el mes de cobros
-MOVIL_CUENTA = "000000000000"
 
 # Saldos que nunca se tocan
 SALDOS_INTOCABLES = {"global-anacarla"}

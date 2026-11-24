@@ -37,9 +37,6 @@ def procesar_correos(cfg, db, correos, log, gmail=None):
                 propio = True
                 notas.append((c, dato))
                 es_nota = True
-            elif tipo == "movil_factura":
-                if reglas.asegurar_mes_movil(db, dato["mes"], dato.get("vence")):
-                    log.append(f"+Móvil: abierto el mes {dato['mes']}")
             elif tipo == "factura_correo":
                 reglas.aplicar_factura_correo(db, dato, log)
             elif tipo == "error":

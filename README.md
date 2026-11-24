@@ -103,6 +103,25 @@ Cuadra es una sola página que se instala como app en el teléfono. Abajo hay ci
 </td></tr>
 </table>
 
+## Las facturas: por qué importan y cómo se pegan
+
+**Por qué importan.** En Panamá, la declaración de renta de una persona natural permite deducir ciertos gastos. Según la [DGI](https://dgi.mef.gob.pa/DInforme/D-IsRenta): gastos médicos, gastos escolares, intereses hipotecarios sin interés preferencial, intereses de préstamos del IFARHU y aportes a un fondo de jubilación privada. Los asalariados que quieren una devolución de impuestos también tienen que presentar la declaración, y la DGI da como fecha límite el 15 de marzo (con prórroga hasta el 15 de abril). Las guías contables que revisé coinciden en lo práctico: hay que conservar los comprobantes de esos gastos durante todo el año.
+
+El problema es la acumulación. Un año son cientos de compras, en varios bancos y a veces de varias personas, y en marzo nadie recuerda qué factura era de qué compra. La factura que no aparece es plata que se deja en la mesa. Cuadra existe, en buena parte, para que en marzo cada factura ya esté pegada a su compra y guardada.
+
+> Esto no es asesoría fiscal. Los topes y las reglas cambian: confírmalos con la [DGI](https://dgi.mef.gob.pa) o con un contador.
+
+**Cómo es una factura en Panamá.** La factura electrónica trae un QR (en el comprobante impreso, el CAFE) y un código único, el **CUFE**. La DGI deja consultarla en su portal con cualquiera de los dos ([preguntas frecuentes](https://dgi.mef.gob.pa/_7facturaelectronica/fpreguntas)). En ventas a consumidor final, el emisor puede mandarla al PAC al final del día, así que a veces la DGI tarda en tenerla.
+
+**Cómo las pega Cuadra.**
+
+1. **Escaneas el QR**, desde el movimiento o desde Inicio sin elegir ninguno. Cuadra va a la DGI con ese código y baja el PDF y los datos: emisor, RUC, número, fecha, total e ITBMS.
+2. **Si la DGI todavía no la publicó**, la factura queda en espera y se busca sola: a las 2 horas, al día siguiente, a los 3 días, a los 7 días y a fin de mes. Si nunca aparece, avisa para que subas el PDF o una foto.
+3. **Busca a qué compra pertenece** (el *match*): el mismo monto exacto, con fecha a ±3 días, en una compra que todavía no tenga factura. Ignora transferencias y movimientos excluidos, y las compras de una tarjeta adicional solo se pegan a su titular.
+4. **Si hay una sola candidata, la pega.** Si hay varias, el parecido entre el nombre del emisor y el del comercio desempata. Si aun así no se decide, no adivina: lo deja en «Por revisar» para que lo elijas tú.
+5. **Si la compra todavía no llegó del banco**, la factura espera hasta 7 días. A las 24 horas ya se archiva en Google Drive con el nombre `fecha_comercio_monto`, en una carpeta por persona y año, así que cada quien tiene sus facturas listas para su propia declaración.
+6. **Una factura nunca crea un movimiento.** Los saldos solo los mueven transacciones reales. Si el total de la factura no coincide con el del movimiento, se anota en el movimiento. Y una misma factura (el mismo CUFE) no se guarda dos veces.
+
 ## Funciones
 
 | | |
@@ -112,7 +131,7 @@ Cuadra es una sola página que se instala como app en el teléfono. Abajo hay ci
 | **Tarjetas de crédito** | Saldo, disponible, fechas de corte y de pago, pago mínimo y pago de contado, con aviso de los pagos próximos. |
 | **Tarjetas adicionales** | Las compras de cada adicional se asignan a su titular y se suman a lo que debe; sus pagos por Yappy se descuentan solos. Cada persona tiene su propio acceso y solo ve lo suyo. |
 | **Cuentas por cobrar** | Cada compra que usó otra persona queda a su nombre. Sus pagos (por ejemplo un Yappy) y los abonos bajan la deuda. Una cuenta se puede dividir entre varias personas. |
-| **Facturas** | Por PDF, foto o código QR de la DGI de Panamá; se emparejan con su movimiento y se archivan en Google Drive. |
+| **Facturas** | Por PDF, foto o código QR de la DGI de Panamá; se emparejan con su movimiento (mismo monto, ±3 días) y se archivan en Google Drive, listas para la declaración de renta. Ver [Las facturas](#las-facturas-por-qué-importan-y-cómo-se-pegan). |
 | **Respaldos** | Copia diaria completa en Google Drive y del código en Git. Una máquina nueva se monta con un solo comando. |
 
 ## Cómo funciona

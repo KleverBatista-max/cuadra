@@ -1,6 +1,6 @@
 """Base de datos: SQLite con documentos JSON por colección (mismo modelo que la app actual).
 
-Colecciones: movs, saldos, cxc, movil, avisos, sistema.
+Colecciones: movs, saldos, cxc, avisos, sistema.
 """
 import json
 import sqlite3
@@ -121,7 +121,7 @@ class DB:
     # ---- respaldo / importación ----
     def exportar(self):
         out = {"fecha": time.strftime("%Y-%m-%dT%H:%M:%S")}
-        for c in ("movs", "saldos", "cxc", "movil"):
+        for c in ("movs", "saldos", "cxc"):
             lst = []
             for d in self.all(c):
                 d = dict(d)
@@ -133,7 +133,7 @@ class DB:
     def importar(self, data, reemplazar=True):
         n = 0
         with self.tx():
-            for c in ("movs", "saldos", "cxc", "movil"):
+            for c in ("movs", "saldos", "cxc"):
                 if c not in data:
                     continue
                 if reemplazar:

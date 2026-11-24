@@ -5,7 +5,6 @@ Acciones posibles (tuplas):
   ("ignorar", motivo)            correo conocido que no genera nada
   ("pi_bancos", dict)            JSON del lector de bancos de la Raspberry
   ("nota_cxc", texto)            nota "Cuentas x Cobrar" del iPhone
-  ("movil_factura", {...})       factura +Móvil disponible
   ("factura_correo", {...})      correo que parece factura de un comercio
   ("error", motivo)              correo de un remitente conocido que no se pudo leer
 """
@@ -203,10 +202,7 @@ def globalbank(c):
     medio = f"Global {ult4}"
     quien, bolsa = quien_bolsa(medio)
     mov = _base(c, comercio=limpiar_comercio(comercio), monto=monto(valor), medio=medio, quien=quien, bolsa=bolsa)
-    if re.search(r"SERVICIO FIJO MAS MOV|SERVICIO CELULAR MAS M|MAS MOVIL|\+M[OÓ]VIL", comercio, re.I):
-        mov.update(comercio="+Móvil (factura del plan)", bolsa="Excluido", factura="No aplica",
-                   notas="Factura +Móvil", movil=True)
-    elif re.search(r"\bpuma\b", comercio, re.I) and float(valor.replace(",", "")) in (10.0, 20.0, 50.0, 85.0, 100.0):
+    if re.search(r"\bpuma\b", comercio, re.I) and float(valor.replace(",", "")) in (10.0, 20.0, 50.0, 85.0, 100.0):
         mov["notas"] = "Posible preautorización de gasolinera; se ajusta con el banco."
         mov["preaut"] = True
     mov["id"] = "gm-" + c.msgid
@@ -263,28 +259,6 @@ def bac_ach(c):
                 tipo="ACH enviado", bolsa="Por confirmar", factura="No aplica", **kw)
     mov["id"] = "ol-" + re.sub(r"[^A-Za-z0-9]", "", c.msgid)[-24:]
     return [("mov", mov)]
-
-
-# ---------------- +Móvil (factura disponible) ----------------
-def cw_factura(c):
-    t = c.cuerpo
-    cta = re.search(r"cuenta(?: para pagos)?\s*(\d{9,})", c.asunto + " " + t)
-    vence = re.search(r"Fecha l[ií]mite de pago\s*(\d{2})/([A-Za-z]{3})/(\d{4})", t)
-    emision = re.search(r"Fecha de emisi[oó]n\s*(\d{2})/([A-Za-z]{3})/(\d{4})", t)
-    if not cta:
-        return [("error", "Factura +Móvil sin número de cuenta")]
-    if cta.group(1) != C.MOVIL_CUENTA:
-        return [("ignorar", f"factura +Móvil de otra cuenta ({cta.group(1)})")]
-    if emision:
-        d, mo, y = emision.groups()
-        mes = f"{y}-{MESES[mo.lower()]:02d}"
-    else:
-        mes = c.local.strftime("%Y-%m")
-    v = None
-    if vence:
-        d, mo, y = vence.groups()
-        v = f"{y}-{MESES[mo.lower()]:02d}-{d}"
-    return [("movil_factura", {"mes": mes, "vence": v})]
 
 
 # ---------------- Correos propios: PI-BANCOS y nota ----------------
@@ -346,7 +320,6 @@ LECTORES = [
     (lambda c: "globalbank.com.pa" in c.remitente, globalbank),
     (lambda c: c.remitente == "mensajesyalertas@bgeneral.com", bgeneral),
     (lambda c: "Movimiento Monetario" in (c.asunto or "") and "baccredomatic" in (c.remitente + c.cuerpo[:3000]).lower(), bac_ach),
-    (lambda c: c.remitente == "facturacion@cwpanama.com" and "Factura" in (c.asunto or ""), cw_factura),
     (lambda c: c.remitente in C.REMITENTES_PROPIOS, propio),
 ]
 

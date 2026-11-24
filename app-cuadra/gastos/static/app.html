@@ -351,7 +351,7 @@ button.divx:active{background:var(--paper)}
 .divlink{border:0;background:none;color:var(--accent);font-weight:600;padding:0}
 .divmsg{margin-top:4px;font-size:12px}
 @media (prefers-reduced-motion:reduce){.divwrap,.divfila{transition:none}.divfila.in{animation:none}}
-.box:has(#movilSum){display:none!important}</style>
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -413,7 +413,6 @@ button.divx:active{background:var(--paper)}
 
   <section class="scr" id="s-cobrar" aria-label="Por cobrar">
     <div class="box"><h2 id="cxcSum">Cuentas por cobrar</h2><div id="cxc"></div><button class="btn" id="cxcAdd" type="button">+ Agregar persona</button></div>
-    <div class="box"><h2 id="movilSum">+Móvil corporativo</h2><div id="movil"></div></div>
   </section>
 
   <section class="scr" id="s-mas" aria-label="Más">
@@ -550,7 +549,7 @@ button.divx:active{background:var(--paper)}
   var FACTS=['Pendiente','Recibida','No aplica'];
   var now=new Date();
   var S={docs:[],month:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'),quien:'Todos',dir:'Todos',vista:(window.__USUARIO__&&window.__USUARIO__.rol!=='admin')?window.__USUARIO__.nombre:null,fact:'Todas',medio:'Todos',
-         saldos:[],cxc:[],movil:[],avisos:[],estado:null,since:[],sinceKey:null,unsubSince:null,db:null,assets:null,sample:null,pending:null,canWrite:true,status:'loading',unsub:null,timer:null,editing:null,delArmed:false,busy:false};
+         saldos:[],cxc:[],avisos:[],estado:null,since:[],sinceKey:null,unsubSince:null,db:null,assets:null,sample:null,pending:null,canWrite:true,status:'loading',unsub:null,timer:null,editing:null,delArmed:false,busy:false};
   var $=function(id){return document.getElementById(id);};
   function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
   function money(n){n=Number(n)||0;var s=Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');return (n<0?'−':'')+'$'+s;}
@@ -592,7 +591,7 @@ button.divx:active{background:var(--paper)}
     inc.forEach(function(d){var m=Number(d.monto)||0;tot+=m;if(d.medio==='Yappy')yap+=m;else tarj+=m;if(d.factura==='Pendiente')pend++;});
     var gm=Calculo.gastoMes(all,!!S.vista);  // 22 nov 2026: sin pagos a tarjetas (antes salía negativo); cálculo en calculo.js
     var liq=Calculo.liquidez(S.saldos,S.since);
-    var porCobrar=Calculo.porCobrar(S.cxc,S.movil);
+    var porCobrar=Calculo.porCobrar(S.cxc);
     var tiles=$('tiles');tiles.textContent='';tiles.className='tiles'+(S.vista?'':' admin');
     $('clientesBox').style.display=S.vista?'':'none';  // Titular ya ve lo de ellas en Por cobrar
     $('misCuentas').style.display=S.vista?'none':'';
@@ -619,7 +618,7 @@ button.divx:active{background:var(--paper)}
     if(S.status==='ready'&&!rows.length){list.appendChild(el('div','note',all.length?'Nada con estos filtros.':'Sin movimientos este mes.'));}
     listaMovs(list,rows);
 
-    renderSaldos();renderCxc();renderMovil();renderPagos();renderClientes();renderAvisos();
+    renderSaldos();renderCxc();renderPagos();renderClientes();renderAvisos();
     if(!S.vista){renderCarrusel();renderCuentas();renderDetalle();renderProximos();}
     else{renderCarrusel();renderDetalle();var uh=$('ultimos');uh.textContent='';var us=S.docs.concat(partesVista(),abonosVista()).sort(function(a,b){return String(b.fecha||'').localeCompare(String(a.fecha||''))||String(b.hora||'').localeCompare(String(a.hora||''));}).slice(0,3);
       us.forEach(function(d){uh.appendChild(filaMov(d));});$('ultBox').hidden=!us.length;}
@@ -745,57 +744,6 @@ button.divx:active{background:var(--paper)}
       host.appendChild(b);
     });
   }
-  function movilPend(){return Calculo.movilPend(S.movil);}
-  function renderMovil(){
-    var host=$('movil');host.textContent='';
-    var list=S.movil.filter(function(m){return String(m.mes||m.id)===S.month;});
-    var m=list[0];
-    if(m){
-      (m.cobros||[]).forEach(function(c,i){
-        var b=el('button','kv kvb');b.type='button';b.appendChild(el('span',null,c.nombre||''));
-        var r=el('span');r.appendChild(el('span','num',money(c.monto)+' '));r.appendChild(el('span','pill '+(c.pagado?'ok':'pend'),c.pagado?'Pagó':'Debe'));b.appendChild(r);
-        b.addEventListener('click',async function(){if(!S.canWrite||!S.db)return;var cs=(m.cobros||[]).map(function(x){return Object.assign({},x);});cs[i].pagado=!cs[i].pagado;try{await S.db.doc('movil/'+m.id).update({cobros:cs});}catch(e){}});
-        host.appendChild(b);
-      });
-      var cg=(m.costoMov&&m.costo&&S.canWrite&&!S.vista)?m.costo:null;
-      if(S.canWrite&&S.db){
-        var pb=el('button','btn',cg?'Cambiar el cargo del plan':'Elegir el cargo del plan');pb.type='button';pb.style.marginTop='8px';
-        pb.addEventListener('click',function(){pickCargoMovil(m);});host.appendChild(pb);
-      }
-    }else{host.appendChild(el('div','hint','Todavía no llega la factura de +Móvil de este mes.'));}
-    if(S.canWrite&&S.db){
-      var eb=el('button','btn',m?'Editar líneas':'Abrir este mes');eb.type='button';eb.style.marginTop='8px';
-      eb.addEventListener('click',function(){editMovil(m);});host.appendChild(eb);
-    }
-    $('movilSum').textContent='+Móvil corporativo';
-  }
-  async function pickCargoMovil(m){
-    var d0=new Date(Date.now()-75*864e5).toISOString().slice(0,10),rows=[];
-    try{var q=await S.db.collection('movs').where('fecha','>=',d0).get();rows=q.docs.map(function(d){var o=Object.assign({},d.data());o.id=d.id;return o;});}catch(e){alert('No pude leer los movimientos.');return;}
-    var re=/m[aá]s ?m[oó]|\+m[oó]vil|servicio (fijo|celular)/i;
-    var c=rows.filter(function(x){return x.tipo==='Compra'&&re.test(x.comercio||'');}).sort(function(a,b){return String(b.fecha).localeCompare(String(a.fecha));}).slice(0,12);
-    if(!c.length){alert('No encontré cargos de Más Móvil en Movimientos.');return;}
-    var opts=[{v:'',t:'— ninguno —'}].concat(c.map(function(x){return {v:x.id,t:x.fecha+' · '+x.comercio+' · '+money(x.monto)+' · '+(x.medio||'')};}));
-    mini('Cargo del plan · '+monthLabel(m.mes||m.id),[{k:'cargo',label:'¿Cuál es el cargo de este mes? (el costo del plan; la ganancia sale de los cobros menos este monto)',type:'sel',options:opts,value:m.costoMov||''}],async function(v){
-      var x=rows.filter(function(r){return r.id===v.cargo;})[0];
-      await S.db.doc('movil/'+m.id).update({costoMov:x?x.id:'',costo:x?{fecha:x.fecha,comercio:x.comercio,monto:x.monto,medio:x.medio||''}:null});
-    });
-  }
-  function editMovil(m){
-    var base=m;if(!base){var prev=S.movil.filter(function(x){return String(x.id)<S.month;}).sort(function(x,y){return String(x.id).localeCompare(String(y.id));});base=prev[prev.length-1]||{cobros:[]};}
-    var txt=(base.cobros||[]).map(function(c){return c.nombre+', '+c.monto+(c.alias?', '+c.alias:'');}).join('\n');
-    mini('+Móvil · '+monthLabel(S.month),[{k:'lineas',label:'Una persona por línea: nombre, monto, nombre en Yappy (opcional). Los meses nuevos copian esta lista.',type:'area',value:txt},{k:'vence',label:'Fecha límite de pago (AAAA-MM-DD)',type:'text',value:m?m.vence||'':''}],async function(v){
-      var viejos={};((m&&m.cobros)||[]).forEach(function(c){viejos[c.nombre]=c.pagado;});
-      var cobros=v.lineas.split('\n').map(function(l){return l.trim();}).filter(Boolean).map(function(l){
-        var p=l.split(',').map(function(x){return x.trim();});var n=parseFloat(String(p[1]||'').replace(/[^0-9.]/g,''));
-        if(!p[0]||isNaN(n))throw new Error('Revisa la línea: '+l);
-        return {nombre:p[0],monto:n,alias:p[2]||'',pagado:!!viejos[p[0]]||p[0]==='Titular'};
-      });
-      var data={mes:S.month,vence:v.vence||'',cobros:cobros};
-      if(m)await S.db.doc('movil/'+m.id).update(data);else await S.db.collection('movil').doc(S.month).set(data);
-    });
-    var ta=$('m_lineas');if(ta)ta.rows=8;
-  }
   var M={save:null,del:null,armed:false,keys:[]};
   function mini(title,fields,onSave,onDel){
     $('mTitle').textContent=title;var f=$('mForm');f.textContent='';
@@ -883,7 +831,6 @@ button.divx:active{background:var(--paper)}
     var map=function(snap){return snap.docs.map(function(d){var o=Object.assign({},d.data());o.id=d.id;return o;});};
     S.db.collection('saldos').onSnapshot(function(snap){S.saldos=map(snap);subSince();render();},function(){});
     S.db.collection('cxc').onSnapshot(function(snap){S.cxc=map(snap);render();},function(){});
-    S.db.collection('movil').onSnapshot(function(snap){S.movil=map(snap);render();},function(){});
     S.db.collection('avisos').onSnapshot(function(snap){S.avisos=map(snap).filter(function(a){return !a.visto;}).sort(function(a,b){return String(b.fecha).localeCompare(String(a.fecha));});render();},function(){});
     S.db.collection('sistema').onSnapshot(function(snap){var e=map(snap).filter(function(x){return x.id==='estado';})[0];S.estado=e||null;render();},function(){});
   }
@@ -1747,7 +1694,7 @@ button.divx:active{background:var(--paper)}
   $('bk').addEventListener('click',async function(){
     try{
       var out={fecha:new Date().toISOString()};
-      for(var c of ['movs','saldos','cxc','movil']){var q=await S.db.collection(c).get();out[c]=q.docs.map(function(d){var o=d.data();o._id=d.id;return o;});}
+      for(var c of ['movs','saldos','cxc']){var q=await S.db.collection(c).get();out[c]=q.docs.map(function(d){var o=d.data();o._id=d.id;return o;});}
       var dl=await window.claude.use('downloads');if(!dl){return;}
       await dl.save({filename:'respaldo-gastos-'+new Date().toLocaleDateString('en-CA')+'.json',data:JSON.stringify(out,null,1)});
     }catch(e){if(!e||e.code!=='declined')$('bk').textContent='No se pudo descargar';}

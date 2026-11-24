@@ -201,9 +201,6 @@ def aplicar_mov(db, mov, log):
                 db.merge("movs", sueltas[0]["id"], {"confirmacion": conf})
             log.append(f"Ya estaba por el banco (otro nombre): {mov['comercio']} ${mov['monto']}")
             return False
-    if mov.get("movil"):
-        asegurar_mes_movil(db, mov["mes"])
-    mov.pop("movil", None)
     db.set("movs", id, mov)
     log.append(f"Nuevo: {mov['fecha']} {mov['comercio']} ${mov['monto']:.2f} ({mov['medio']})")
     if mov.get("medio", "").startswith(("BG cuenta",)):
@@ -217,10 +214,10 @@ def aplicar_mov(db, mov, log):
 
 
 def cruzar_cobro(db, yid, y, log):
-    """Yappy recibido -> reembolso de adicional, cobro +Móvil o abono en la casilla de movimientos de la persona.
+    """Yappy recibido -> reembolso de adicional o abono en la casilla de movimientos de la persona.
     Nunca toca las partidas de la nota. Titular puede cambiar la marca en el movimiento."""
     valor = round(float(y["monto"]), 2)
-    # la casilla de movimientos solo cuenta desde CXC_MOVS_DESDE; +Móvil y reembolsos funcionan siempre (14 nov)
+    # la casilla de movimientos solo cuenta desde CXC_MOVS_DESDE; los reembolsos funcionan siempre (14 nov)
     marca_cxc = C.CXC_AUTOMATICA and (y.get("fecha") or "") >= C.CXC_MOVS_DESDE
     # 1) reembolso exacto de una compra de su tarjeta adicional
     if y["quien"] in ("Ana", "Beatriz"):
@@ -242,9 +239,7 @@ def cruzar_cobro(db, yid, y, log):
             avisar(db, f"Yappy de {y['quien']} por ${valor:.2f} el {y['fecha']} coincide con {len(cands)} compras; márcalo a mano.")
             return
     nombre = norm(y["comercio"])
-    # 2) (23 nov 2026) +Móvil ya no se cruza con Yappys: es una lista de chequeo; lo que cada quien debe del plan es una deuda
-    #    normal en Cuentas por cobrar (`cargar_movil`) y el Yappy entra aquí abajo como abono, igual que cualquier otro.
-    # 3) abono en la casilla de movimientos (no toca la nota)
+    # 2) abono en la casilla de movimientos (no toca la nota)
     if not marca_cxc:
         return
     posibles = [p for p in db.all("cxc") if (p.get("alias") and norm(p["alias"]) == nombre)
@@ -260,56 +255,6 @@ def cruzar_cobro(db, yid, y, log):
     elif posibles:
         avisar(db, f"Posible cobro: {y['comercio']} mandó ${valor:.2f} el {y['fecha']} y coincide con varias personas. "
                    f"Abre el movimiento y elige a quién en «Por cobrar».")
-
-
-# ---------------- +Móvil ----------------
-MESES_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
-
-
-def cargar_movil(db, mes, mov_id=None):
-    """Pasa lo que debe cada línea del mes a Cuentas por cobrar (23 nov 2026, idea de Titular): una deuda normal por persona
-    («Laura debe: +Móvil diciembre»), igual que `asistente debe`; con `mov_id` queda ligada al cargo del banco. No incluye la
-    línea de Titular ni las ya marcadas pagadas, y no repite: guarda en `cargados` qué línea ya pasó. El checklist de +Móvil no
-    cambia. Personas que no existen en Por cobrar (Buki, Ñeñe) se crean."""
-    from .asistente import Asistente, ErrorAsistente
-    m = db.get("movil", mes)
-    if not m:
-        raise ErrorAsistente(f"No existe el mes {mes} de +Móvil.")
-    a = Asistente(db)
-    cargados = dict(m.get("cargados") or {})
-    nombre_mes = MESES_ES[int(mes[5:7]) - 1]
-    hechos = []
-    for c in m.get("cobros") or []:
-        n = c.get("nombre") or ""
-        if not n or n == "Titular" or c.get("pagado") or n in cargados:
-            continue
-        try:
-            p = a.persona(n)
-        except ErrorAsistente:
-            a.persona_nueva(n, c.get("alias") or "")
-            p = a.persona(n)
-        _, mid, _ = a.debe(p["id"], c["monto"], f"+Móvil {nombre_mes}", mov=mov_id)
-        cargados[n] = mid
-        hechos.append(n)
-    db.merge("movil", mes, {"cargados": cargados})
-    return hechos
-
-
-def asegurar_mes_movil(db, mes, vence=None):
-    if db.exists("movil", mes):
-        if vence:
-            cur = db.get("movil", mes)
-            if not cur.get("vence"):
-                db.merge("movil", mes, {"vence": vence})
-        return False
-    previos = sorted([m for m in db.all("movil") if m["id"] < mes], key=lambda x: x["id"])
-    if not previos:
-        avisar(db, f"No hay mes anterior de +Móvil para copiar las líneas de {mes}.")
-        return False
-    # la línea de Titular (la que él mismo paga) nace «pagada»: cuenta para la ganancia pero no es por cobrar
-    cobros = [{**c, "pagado": c.get("nombre") == "Titular"} for c in previos[-1].get("cobros", [])]
-    db.set("movil", mes, {"mes": mes, "vence": vence or "", "cobros": cobros})
-    return True
 
 
 # ---------------- Bancos (lector de la Raspberry) ----------------

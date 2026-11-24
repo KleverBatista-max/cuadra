@@ -28,8 +28,6 @@
   }
   // 23 nov 2026 (Titular): una cuenta que se pasa de pagada queda en cero; el sobrante es de Titular, no saldo a favor de la persona.
   function cxcTotal(p){return Math.max(0,sum(p.partidas)+(Number(p.deMovs)||0));}
-  // 23 nov 2026: +Móvil es solo una lista de chequeo; lo que debe cada quien vive en Cuentas por cobrar (no se cuenta dos veces).
-  function movilPend(movil){return 0;}
   // movimientos desde la lectura más vieja de los saldos (lo que la página llama S.since)
   function sinceDe(saldos,movs){
     var min=null;(saldos||[]).forEach(function(x){var d=String(x.desde||'').slice(0,10);if(d&&(!min||d<min))min=d;});
@@ -41,7 +39,7 @@
       if(x.tipo==='tarjeta'){if(c.deuda!=null)liq.d+=c.deuda;}else if(x.contar!==false)liq.c+=c.saldo;});
     return liq;
   }
-  function porCobrar(cxc,movil){return (cxc||[]).reduce(function(t,p){return t+cxcTotal(p);},0)+movilPend(movil);}
+  function porCobrar(cxc){return (cxc||[]).reduce(function(t,p){return t+cxcTotal(p);},0);}
   function nextDay(day,hoy){var d=new Date(hoy.getFullYear(),hoy.getMonth(),day);if(d<hoy)d=new Date(hoy.getFullYear(),hoy.getMonth()+1,day);return d;}
   function proxDia(day,hoy){if(!day)return null;var t=new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate());var d=nextDay(Number(day),t);return {d:d,n:Math.round((d-t)/864e5)};}
   function sinPagoDe(x){return x.saldoCorte===0||x.pagoMin===0;}
@@ -56,7 +54,7 @@
     var q=hoyStr.split('-'),hoy=new Date(+q[0],+q[1]-1,+q[2]);
     var saldos=(datos.saldos||[]).slice().sort(function(a,b){return (a.orden||0)-(b.orden||0);});
     var since=sinceDe(saldos,datos.movs),calc={};saldos.forEach(function(x){calc[x.id]=saldoCalc(x,since);});
-    var liq=liquidez(saldos,since),pc=porCobrar(datos.cxc,datos.movil),mv=movilPend(datos.movil);
+    var liq=liquidez(saldos,since),pc=porCobrar(datos.cxc);
     var personas=(datos.cxc||[]).filter(function(p){return !(Math.abs(cxcTotal(p))<0.005&&(p.detalleMovs||[]).length>0);})
       .map(function(p){return [p.nombre||p.id,Math.round(cxcTotal(p)*100)/100];}).sort(function(a,b){return b[1]-a[1];});
     var mes=hoyStr.slice(0,7);
@@ -72,10 +70,10 @@
       t.compartida=!!t.grupo;t.grupo_deuda=gr.every(function(o){return o.deuda!=null;})?gr.reduce(function(s,o){return s+o.deuda;},0):null;});
     var cuentas=saldos.filter(function(x){return x.tipo!=='tarjeta'&&x.medios&&x.medios.length;}).map(function(x){
       return {id:x.id,banco:x.banco,nombre:x.nombre,medios:x.medios,saldo:calc[x.id].saldo,cuenta:x.contar!==false,nota:x.nota||'',actualizado:String(x.desde||'')};});
-    return {hoy:hoyStr,neto:liq.c+pc-liq.d,liquidez:liq.c,por_cobrar:pc,movil:mv,por_cobrar_personas:personas,deuda_tarjetas:liq.d,gasto_mes:gasto,mes:mes,tarjetas:tarjetas,cuentas:cuentas};
+    return {hoy:hoyStr,neto:liq.c+pc-liq.d,liquidez:liq.c,por_cobrar:pc,por_cobrar_personas:personas,deuda_tarjetas:liq.d,gasto_mes:gasto,mes:mes,tarjetas:tarjetas,cuentas:cuentas};
   }
 
-  var API={isIn:isIn,sum:sum,stamp:stamp,saldoCalc:saldoCalc,cxcTotal:cxcTotal,movilPend:movilPend,sinceDe:sinceDe,liquidez:liquidez,porCobrar:porCobrar,
+  var API={isIn:isIn,sum:sum,stamp:stamp,saldoCalc:saldoCalc,cxcTotal:cxcTotal,sinceDe:sinceDe,liquidez:liquidez,porCobrar:porCobrar,
     nextDay:nextDay,proxDia:proxDia,sinPagoDe:sinPagoDe,gastoMes:gastoMes,resumen:resumen};
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Calculo = API;
 })(typeof window !== 'undefined' ? window : globalThis);

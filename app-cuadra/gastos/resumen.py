@@ -15,7 +15,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 
 def calcular(db, hoy=None):
     hoy = hoy or datetime.now(ZoneInfo("America/Panama")).date()
-    datos = {"saldos": db.all("saldos"), "movs": db.all("movs"), "cxc": db.all("cxc"), "movil": db.all("movil"), "hoy": hoy.isoformat()}
+    datos = {"saldos": db.all("saldos"), "movs": db.all("movs"), "cxc": db.all("cxc"), "hoy": hoy.isoformat()}
     p = subprocess.run(["node", os.path.join(AQUI, "calculo_cli.js")], input=json.dumps(datos), capture_output=True, text=True, timeout=30)
     if p.returncode != 0:
         raise RuntimeError("No pude calcular el resumen: " + (p.stderr.strip().splitlines() or ["error de node"])[-1])
@@ -55,7 +55,7 @@ def texto_resumen(r):
     l = [f"Resumen al {r['hoy'].isoformat()} (los mismos números de la pantalla de inicio):",
          f"Neto: {_m(r['neto'])}  (Liquidez + Por cobrar − Debo en tarjetas)",
          f"Liquidez (plata en cuentas que cuentan): {_m(r['liquidez'])}",
-         f"Por cobrar: {_m(r['por_cobrar'])}" + (f"  (incluye {_m(r['movil'])} de +Móvil sin pagar)" if r["movil"] else ""),
+         f"Por cobrar: {_m(r['por_cobrar'])}",
          f"Debo en tarjetas: {_m(r['deuda_tarjetas'])}",
          f"Gasto del mes ({r['mes']}, bolsa Titular, sin pagos a tarjetas): {_m(r['gasto_mes'])}"]
     if r["por_cobrar_personas"]:
