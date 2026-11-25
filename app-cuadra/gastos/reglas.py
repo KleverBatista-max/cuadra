@@ -514,6 +514,7 @@ def aplicar_bancos(db, data, desde, log):
         dup = None if es_tarjeta(m) else next((e for e in existentes if e["id"] not in usados and misma_tx(e, m)), None)
         if dup:
             usados.add(dup["id"])
+            marcar_cruce(db, dup, m)
         else:
             sin_par.append(m)
     for m in sin_par:
@@ -523,6 +524,7 @@ def aplicar_bancos(db, data, desde, log):
             if len(sueltos) == 1:
                 usados.add(sueltos[0]["id"])
                 db.merge("movs", sueltos[0]["id"], {"nombreBanco": m.get("comercio")})
+                marcar_cruce(db, sueltos[0], m)
                 log.append(f"Cruzado con otro nombre: {sueltos[0].get('comercio')} = {m.get('comercio')} ${m['monto']}")
                 continue
             if len(sueltos) > 1:
@@ -751,6 +753,15 @@ def cuadre_cuenta(db, sid, desde, log):
 ANCLA_DISP = "2026-11-11"   # desde aquí se suman los movimientos para el cuadre del disponible
 
 VENTANA_AVISOS = 35        # días hacia atrás en que un aviso del correo puede enlazarse con lo que asienta el banco
+def marcar_cruce(db, e, m):
+    """Yappy/ACH del correo que ya cruzó con una fila del banco: se deja escrito (`banco`). Sin esto, cuando la fila salía de
+    la lista del banco (BG/Global traen ~10 días) el aviso quedaba «flotante» y se sumaba otra vez al saldo (24 nov 2026:
+    Yappy +$50, 13 nov)."""
+    if e.get("origen") == "correo" and not e.get("banco"):
+        db.merge("movs", e["id"], {"banco": {"fecha": m["fecha"], "monto": m["monto"], "comercio": m.get("comercio")},
+                                   "flotante": None})
+
+
 def asentar(db, e, m, usados, log, pista=False):
     """El banco asentó el aviso e del correo: el banco manda en el monto. Si el monto cambió, se busca de nuevo su
     factura con el monto real (aunque hayan pasado los 7 días de búsqueda)."""

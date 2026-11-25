@@ -12,6 +12,7 @@ from .util import ahora_panama
 
 BANCOS = {"global-": "Global", "bac-": "BAC", "bg-": "Banco General", "banesco-": "Banesco"}
 HORAS_BANCO = 20          # se corre a las 10:00 y 18:30: más de 20 h sin leer = fallaron dos corridas seguidas
+HORAS_BANCO_ESPECIAL = {"Banesco": 26}   # Banesco solo se lee 10:00 y 13:00 (desde 24 nov 2026): de 13:05 a 10:00 hay 21 h
 VUELTAS_FALLA = 3         # un paso que falla 3 vueltas seguidas (15 min) avisa
 PASOS = ("DGI", "Facturas sueltas")
 DISCO_MAX = 0.85
@@ -34,7 +35,7 @@ def bancos_frescos(db, ahora):
         if banco and f and (banco not in ultimo or f > ultimo[banco]):
             ultimo[banco] = f
     for banco, f in ultimo.items():
-        if ahora - f > timedelta(hours=HORAS_BANCO):
+        if ahora - f > timedelta(hours=HORAS_BANCO_ESPECIAL.get(banco, HORAS_BANCO)):
             avisar(db, f"No se ha podido leer {banco} desde el {f:%d/%m %H:%M} (fallaron las últimas corridas). "
                        f"Mira /root/bancos_out/cron.log en el servidor.", clave=f"salud-banco-{banco}-{f:%Y%m%d%H%M}")
 
