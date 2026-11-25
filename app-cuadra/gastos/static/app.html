@@ -730,8 +730,14 @@ button.divx:active{background:var(--paper)}
       var g=el('div','cc-g');g.style.gridTemplateColumns='repeat(2,minmax(0,1fr))';
       var celdas=[['Compras desde 11 nov',money(cargos)],['Pagos desde 11 nov',money(pagos)]];
       // 16 nov (Titular): ellas ven de dónde sale el total: lo que venía de antes, sus compras y sus abonos (el detalle, en los movimientos).
-      if(S.vista&&cx){var dmv=cx.detalleMovs||[],co=0,ab=0;dmv.forEach(function(x){var v=Number(x.monto)||0;if(v>0)co+=v;else ab-=v;});
-        celdas=[['Compras',money(co)],['Abonos',money(ab)]];}
+      // 25 nov 2026 (Beatriz/Ana vía Titular): por mes, saldo al inicio + compras - abonos = saldo actual (o al cierre si el mes ya pasó).
+      // Inicio = total de hoy menos todo lo movido desde el día 1 del mes elegido (las partidas viejas cuentan como «de antes»).
+      if(S.vista&&cx){var dmv=cx.detalleMovs||[],co=0,ab=0,desde=0;
+        dmv.forEach(function(x){var v=Number(x.monto)||0,ym=String(x.fecha||'').slice(0,7);
+          if(ym>=S.month)desde+=v;
+          if(ym===S.month){if(v>0)co+=v;else ab-=v;}});
+        var ini=deb-desde,fin=ini+co-ab,hoyYm=new Date().toLocaleDateString('en-CA',{timeZone:'America/Panama'}).slice(0,7);
+        celdas=[['Saldo al inicio de mes',money(ini)],['Compras del mes',money(co)],['Abonos del mes',money(ab)],[S.month<hoyYm?'Saldo al cierre':'Saldo actual',money(fin)]];}
       celdas.forEach(function(t){var c=el('div','cc-c');c.appendChild(el('div','cc-l',t[0]));c.appendChild(el('div','cc-d',t[1]));g.appendChild(c);});
       b.appendChild(g);
       if(S.vista&&cx){b.style.cursor='default';b.appendChild(el('div','cc-sub','Tus compras y abonos salen abajo, en los movimientos.'));}
