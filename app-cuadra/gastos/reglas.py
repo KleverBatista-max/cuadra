@@ -689,6 +689,10 @@ def cuadre_disponible(db, sid, desde, log):
         dif = round(k - float(antes["k"]), 2)
         flot = [m for m in db.where("movs", "fecha", ">=", ANCLA_DISP) if m.get("medio") in medios and m.get("flotante")
                 and not m.get("banco") and not m.get("caido") and abs(float(m.get("monto") or 0) - dif) < 0.01]
+        # 25 nov 2026: Global mando cada alerta por duplicado (dos correos, misma hora): quedan N flotantes IDENTICAS
+        # (misma fecha, hora, comercio, tarjeta y monto). Son intercambiables: cae una sola (la de id mayor).
+        if len(flot) > 1 and len({(m["fecha"], m.get("hora"), m.get("comercio"), m.get("medio")) for m in flot}) == 1:
+            flot = [max(flot, key=lambda m: m["id"])]
         if len(flot) == 1:
             m = flot[0]
             db.merge("movs", m["id"], {"flotante": None, "enTransito": None, "caido": True})
