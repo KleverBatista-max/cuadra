@@ -158,6 +158,40 @@ tailscale funnel --bg 8080
 [ -f /etc/systemd/system/recetas.service ] && tailscale funnel --bg --https=8443 --set-path=/recetas http://127.0.0.1:8098
 [ -f /etc/systemd/system/escaner.service ] && tailscale funnel --bg --https=8443 --set-path=/escaner http://127.0.0.1:8097
 
+
+# Cuadra público directo por la IP fija, sin Funnel (27 nov 2026): Caddy + https://<IP-con-guiones>.sslip.io. Solo la app de gastos y el conector.
+if [ -f /etc/systemd/system/cuadra-mcp.service ]; then
+  echo "==> Cuadra público por IP (Caddy)"
+  IP=$(ip -4 route get 1.1.1.1 | grep -oP 'src \K\S+'); H="$(echo "$IP" | tr . -).sslip.io"
+  apt-get install -y -qq caddy >/dev/null
+  cat > /etc/caddy/Caddyfile <<CADDY
+$H {
+	bind $IP
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		-Server
+	}
+	@mcp path /mcp /mcp/* /token /revoke /register /authorize /cuadra-login /.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/* /.well-known/oauth-authorization-server /.well-known/oauth-authorization-server/*
+	handle @mcp {
+		reverse_proxy 127.0.0.1:9100 {
+			flush_interval -1
+		}
+	}
+	handle {
+		reverse_proxy 127.0.0.1:8080
+	}
+}
+CADDY
+  mkdir -p /etc/systemd/system/cuadra-mcp.service.d
+  printf '[Service]\nEnvironment=CUADRA_MCP_BASE=https://%s\n' "$H" > /etc/systemd/system/cuadra-mcp.service.d/direccion.conf
+  command -v ufw >/dev/null && { ufw allow 80/tcp >/dev/null; ufw allow 443/tcp >/dev/null; }
+  systemctl daemon-reload; systemctl restart cuadra-mcp; systemctl enable caddy >/dev/null 2>&1; systemctl restart caddy
+  echo "    Cuadra: https://$H  (en claude.ai: agregar de nuevo el conector con https://$H/mcp)"
+fi
+
 echo
 echo "Listo. Pruebas rápidas:"
 echo "  sudo -u gastos -H gastos probar-gmail"
