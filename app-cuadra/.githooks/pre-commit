@@ -2,9 +2,9 @@
 # No deja guardar (commit) si alguna prueba falla. Las pruebas nunca tocan el Drive real (tests/conftest.py).
 cd "$(git rev-parse --show-toplevel)"
 PY=venv/bin/python; [ -x "$PY" ] || PY=python3
-if ! "$PY" -m pytest -q -x >/tmp/pruebas-cuadra.log 2>&1; then
-  tail -25 /tmp/pruebas-cuadra.log
+if ! "$PY" -m pytest -q -x >/tmp/pruebas-cuadra-$(id -u).log 2>&1; then
+  tail -25 /tmp/pruebas-cuadra-$(id -u).log
   echo "✗ Hay pruebas que fallan: no se guardó el cambio. Arréglalas (o revisa si la regla cambió a propósito)."
   exit 1
 fi
-echo "✓ $(tail -1 /tmp/pruebas-cuadra.log)"
+echo "✓ $(tail -1 /tmp/pruebas-cuadra-$(id -u).log)"

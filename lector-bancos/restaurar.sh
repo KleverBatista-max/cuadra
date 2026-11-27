@@ -159,7 +159,7 @@ tailscale funnel --bg 8080
 [ -f /etc/systemd/system/escaner.service ] && tailscale funnel --bg --https=8443 --set-path=/escaner http://127.0.0.1:8097
 
 
-# Cuadra público directo por la IP fija, sin Funnel (27 nov 2026): Caddy + https://<IP-con-guiones>.sslip.io. Solo la app de gastos y el conector.
+# Todo público directo por la IP fija, sin Funnel (27 nov 2026): Caddy + https://<IP-con-guiones>.sslip.io (443 Cuadra+conector, 8443 Paquetes/Recetas/Escáner/Facturas, 10000 Reclamos).
 if [ -f /etc/systemd/system/cuadra-mcp.service ]; then
   echo "==> Cuadra público por IP (Caddy)"
   IP=$(ip -4 route get 1.1.1.1 | grep -oP 'src \K\S+'); H="$(echo "$IP" | tr . -).sslip.io"
@@ -184,10 +184,48 @@ $H {
 		reverse_proxy 127.0.0.1:8080
 	}
 }
+
+$H:8443 {
+	bind $IP
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		-Server
+	}
+	@recetas path /recetas /recetas/*
+	handle @recetas {
+		reverse_proxy 127.0.0.1:8098
+	}
+	@escaner path /escaner /escaner/*
+	handle @escaner {
+		reverse_proxy 127.0.0.1:8097
+	}
+	@factura path /factura /factura/*
+	handle @factura {
+		reverse_proxy 127.0.0.1:8096
+	}
+	handle {
+		reverse_proxy 127.0.0.1:8090
+	}
+}
+
+$H:10000 {
+	bind $IP
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		-Server
+	}
+	reverse_proxy 127.0.0.1:8095
+}
 CADDY
   mkdir -p /etc/systemd/system/cuadra-mcp.service.d
   printf '[Service]\nEnvironment=CUADRA_MCP_BASE=https://%s\n' "$H" > /etc/systemd/system/cuadra-mcp.service.d/direccion.conf
-  command -v ufw >/dev/null && { ufw allow 80/tcp >/dev/null; ufw allow 443/tcp >/dev/null; }
+  command -v ufw >/dev/null && { for pt in 80 443 8443 10000; do ufw allow $pt/tcp >/dev/null; done; }
   systemctl daemon-reload; systemctl restart cuadra-mcp; systemctl enable caddy >/dev/null 2>&1; systemctl restart caddy
   echo "    Cuadra: https://$H  (en claude.ai: agregar de nuevo el conector con https://$H/mcp)"
 fi
