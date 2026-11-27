@@ -204,10 +204,14 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 /* Colores de cada banco con aire de tarjeta real: base oscura, luz de color arriba a la derecha y un reflejo en diagonal (27 nov 2026) */
 .tc{box-shadow:0 8px 22px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.09)}
 .tc::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,0) 38%,rgba(255,255,255,.08) 48%,rgba(255,255,255,0) 58%)}
-.tc.banesco{background:radial-gradient(120% 95% at 92% -5%,rgba(46,204,126,.50),rgba(46,204,126,0) 58%),linear-gradient(135deg,#030d08 0%,#0a3322 52%,#007953 100%)}
-.tc.global{background:radial-gradient(120% 95% at 92% -5%,rgba(70,130,255,.58),rgba(70,130,255,0) 58%),linear-gradient(135deg,#040916 0%,#0a1a47 52%,#0047ba 100%)}
-.tc.bac{background:radial-gradient(120% 95% at 92% -5%,rgba(255,92,96,.52),rgba(255,92,96,0) 58%),linear-gradient(135deg,#180207 0%,#650916 52%,#c9283d 100%)}
-.tc.amex{background:radial-gradient(90% 80% at 8% -5%,rgba(222,182,96,.55),rgba(222,182,96,0) 55%),radial-gradient(90% 80% at 100% 105%,rgba(86,128,190,.42),rgba(86,128,190,0) 60%),linear-gradient(135deg,#08080a 0%,#1a1813 55%,#2e281c 100%)}
+.tc.global{background:radial-gradient(110% 90% at 92% -8%,rgba(150,138,128,.30),rgba(150,138,128,0) 55%),linear-gradient(135deg,#0b090a 0%,#141011 55%,#2b271f 100%)}
+.tc.amex{background:radial-gradient(70% 60% at 50% 42%,rgba(214,176,96,.30),rgba(214,176,96,0) 65%),radial-gradient(80% 60% at 55% 105%,rgba(80,120,170,.40),rgba(80,120,170,0) 65%),linear-gradient(135deg,#030303 0%,#0b0b0b 60%,#171717 100%)}
+.tc.banesco{background:radial-gradient(95% 70% at 50% 140%,rgba(175,175,175,.58),rgba(175,175,175,0) 64%),linear-gradient(160deg,#000 0%,#050505 70%,#101010 100%)}
+.tc.bac{background:linear-gradient(135deg,#cfd0cf 0%,#e8e9e8 48%,#d4d5d4 100%);color:#17191d;box-shadow:0 8px 22px rgba(0,0,0,.22),inset 0 0 0 1px rgba(0,0,0,.10)}
+.tc.bac .pend{background:rgba(0,0,0,.10)}
+.tc.bac .chip2{background:rgba(0,0,0,.08)}
+.tc.bac .menu{color:#fff}
+/* Los colores salen de las fotos reales de las tarjetas de Titular (27 nov 2026): Global casi negra con reflejo cálido, Amex negra con dorado y azul, BAC SmartCash plateada (texto oscuro), Banesco negra con la cúpula gris. */
 .tc.otro{background:linear-gradient(135deg,#24423a,#3f6f61)}
 .tc .t1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .tc .bco{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.02em}
