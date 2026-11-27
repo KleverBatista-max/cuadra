@@ -204,11 +204,11 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 /* Colores de cada banco con aire de tarjeta real: base oscura, luz de color arriba a la derecha y un reflejo en diagonal (27 nov 2026) */
 .tc{box-shadow:0 8px 22px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.09)}
 .tc::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,0) 38%,rgba(255,255,255,.08) 48%,rgba(255,255,255,0) 58%)}
-.tc.global{background:radial-gradient(120% 95% at 92% -5%,rgba(70,130,255,.58),rgba(70,130,255,0) 58%),linear-gradient(135deg,#040916 0%,#0a1a47 52%,#0047ba 100%)}
-.tc.banesco{background:radial-gradient(120% 95% at 92% -5%,rgba(46,204,126,.50),rgba(46,204,126,0) 58%),linear-gradient(135deg,#030d08 0%,#0a3322 52%,#007953 100%)}
-.tc.bac{background:radial-gradient(120% 95% at 92% -5%,rgba(255,92,96,.52),rgba(255,92,96,0) 58%),linear-gradient(135deg,#180207 0%,#650916 52%,#df082f 100%)}
-/* Colores OFICIALES de marca (27 nov 2026): Global #0047BA (CSS de globalbank.com.pa), Banesco #007953 (CSS de banesco.com), BAC #DF082F (píxeles del logo en baccredomatic.com). La Amex lleva el diseño propio de Titular: negra con dorado y azul. */
-.tc.amex{background:radial-gradient(70% 60% at 50% 42%,rgba(214,176,96,.30),rgba(214,176,96,0) 65%),radial-gradient(80% 60% at 55% 105%,rgba(80,120,170,.40),rgba(80,120,170,0) 65%),linear-gradient(135deg,#030303 0%,#0b0b0b 60%,#171717 100%)}
+.tc.global{background:linear-gradient(#0047ba,#0047ba) top/100% 3px no-repeat,radial-gradient(90% 70% at 95% -10%,rgba(0,71,186,.20),rgba(0,71,186,0) 60%),linear-gradient(135deg,#0b0d12 0%,#15181f 60%,#20242c 100%)}
+.tc.bac{background:linear-gradient(#df082f,#df082f) top/100% 3px no-repeat,radial-gradient(90% 70% at 95% -10%,rgba(223,8,47,.18),rgba(223,8,47,0) 60%),linear-gradient(135deg,#100d0e 0%,#1d1819 60%,#272021 100%)}
+.tc.banesco{background:linear-gradient(#007953,#007953) top/100% 3px no-repeat,radial-gradient(90% 70% at 95% -10%,rgba(0,121,83,.20),rgba(0,121,83,0) 60%),linear-gradient(135deg,#040605 0%,#0c100e 60%,#161b18 100%)}
+.tc.amex{background:linear-gradient(#c9a45c,#c9a45c) top/100% 3px no-repeat,radial-gradient(70% 60% at 50% 42%,rgba(214,176,96,.16),rgba(214,176,96,0) 65%),radial-gradient(80% 60% at 55% 105%,rgba(80,120,170,.22),rgba(80,120,170,0) 65%),linear-gradient(135deg,#030303 0%,#0b0b0b 60%,#171717 100%)}
+/* Tarjetas sobrias (27 nov 2026, Titular: «solo detallecitos del color del banco»): base casi negra y UN detalle de marca: franja fina arriba + brillo muy suave. Global #0047BA, BAC #DF082F, Banesco #007953 (colores oficiales); Amex 1101: dorado, diseño propio de Titular. */
 .tc.otro{background:linear-gradient(135deg,#24423a,#3f6f61)}
 .tc .t1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .tc .bco{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.02em}
