@@ -1,0 +1,3 @@
+# Copiar a /etc/systemd/system/cuadra-mcp.service.d/direccion.conf (mkdir -p) y: sudo systemctl daemon-reload && sudo systemctl restart cuadra-mcp
+[Service]
+Environment=CUADRA_MCP_BASE=https://__IP_CON_GUIONES__.sslip.io

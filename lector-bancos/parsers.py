@@ -55,6 +55,36 @@ def global_tarjeta(text):
     return d
 
 
+def global_estado(text):
+    """«Estado de cuenta» de la tarjeta de Global (27 nov 2026). Después del corte la pestaña «Movimientos» queda VACÍA y todo
+    pasa al estado de cuenta (compras, pagos y el CASH BACK, que nunca sale como aviso del correo). Trae el detalle de la
+    principal y, debajo, el de cada adicional («Detalle de compras y pagos - Adicional - NOMBRE - XXXX-XXXX-XXXX-1105»).
+    Las compras de una adicional salen también en la lista de la principal con el mismo número de referencia: se quedan
+    con la adicional. Devuelve [{"fecha","desc","monto","tarjeta"}]; tarjeta = últimos 4 de la adicional o None (principal);
+    monto con el mismo signo que la pestaña Movimientos (compra negativa, pago/crédito positivo)."""
+    i = text.find("Detalle de compras y pagos")
+    if i < 0:
+        return []
+    filas, ref_adic = [], set()
+    cortes = [(m.start(), m.group(1)) for m in re.finditer(r"Detalle de compras y pagos(?: - Adicional - .*? - XXXX-XXXX-XXXX-(\d{4}))?\n", text[i:])]
+    for k, (ini, ult) in enumerate(cortes):
+        fin = cortes[k + 1][0] if k + 1 < len(cortes) else len(text) - i
+        for m in re.finditer(r"^(\d{2}) ([A-Z]{3}) (\d{4})\t([^\t]*)\t(.+?)\t(-?\$[\d,\.]+|-)\t(-?\$[\d,\.]+|-)\s*$", text[i + ini:i + fin], re.M):
+            compra, pago = m.group(6), m.group(7)
+            monto = money(compra) if compra != "-" else (abs(money(pago)) if pago != "-" else 0.0)
+            ref = m.group(4).strip()
+            if ult and ref:
+                ref_adic.add(ref)
+            filas.append({"fecha": iso(m.group(1), MESES[m.group(2)], m.group(3)), "ref": ref, "desc": m.group(5).strip(),
+                          "monto": monto, "tarjeta": ult})
+    out = []
+    for f in filas:
+        if f["tarjeta"] is None and f["ref"] and f["ref"] in ref_adic:
+            continue   # compra de una adicional repetida en la lista de la principal
+        out.append({"fecha": f["fecha"], "desc": f["desc"], "monto": f["monto"], "tarjeta": f["tarjeta"]})
+    return out
+
+
 def global_adicionales(text, principal=""):
     """Pestaña "Tarjetas adicionales" de la tarjeta de Global (14 nov 2026): lista NOMBRE / XXXX-1234 / $ / Disponible al.
     Devuelve [{"nombre", "ultimos4"}] sin la principal. El disponible de esa lista va atrasado: no se usa."""

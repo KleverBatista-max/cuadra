@@ -188,7 +188,8 @@ def banco_global(page, env):
                                            "disponible": d.get("disponible", t["disponible"]),
                                            "al": al_iso(d.get("al") or t.get("al")),   # "Disponible al 14 nov" (14 nov)
                                            "pagoDia": d.get("pagoDia"), "pagoMin": d.get("pagoMin")}))
-            for m in d["movs"]:
+            est = global_estado_filas(page)   # 27 nov 2026: tras el corte «Movimientos» sale vacío; todo está en el estado de cuenta
+            for m in sin_repetir(d["movs"], [f for f in est if f["tarjeta"] is None]):
                 x = mov_tarjeta(m, "Global MC " + t["ultimos4"])
                 if x: res["movimientos"].append(x)
         except Exception as e:
@@ -208,7 +209,7 @@ def banco_global(page, env):
                     if a["ultimos4"] not in tx or "additional-card" not in page.url:
                         raise RuntimeError("no abrió la adicional (url: %s)" % page.url)
                     n = 0
-                    for m in P.global_tarjeta(tx)["movs"]:
+                    for m in sin_repetir(P.global_tarjeta(tx)["movs"], [f for f in est if f["tarjeta"] == a["ultimos4"]]):
                         x = mov_tarjeta(m, "Global MC " + a["ultimos4"])
                         if x:
                             res["movimientos"].append(x); n += 1
@@ -219,6 +220,37 @@ def banco_global(page, env):
         except Exception as e:
             print("  Global adicionales no leídas:", str(e).splitlines()[0][:200])
     return res
+
+
+def global_estado_filas(page):
+    """Pestaña «Estado de cuenta» de la tarjeta (mes más reciente), con todos los «Ver más» abiertos. Solo lee.
+    Si falla no tumba la lectura de Global: devuelve [] y lo dice en el log."""
+    try:
+        page.get_by_text("Estado de cuenta", exact=True).first.click(); esperar(page, 3500)
+        for _ in range(10):
+            if not page.get_by_text("Ver más", exact=True).count():
+                break
+            page.get_by_text("Ver más", exact=True).first.click(); esperar(page, 1500)
+        dbg(page, "global", "estado_cuenta")
+        filas = P.global_estado(texto(page))
+        print("  Global estado de cuenta: %d filas" % len(filas))
+        return filas
+    except Exception as e:
+        print("  Global estado de cuenta no leído:", str(e).splitlines()[0][:200])
+        return []
+
+
+def sin_repetir(movs, filas_estado):
+    """Movimientos de la pestaña + filas del estado de cuenta que NO estén ya (misma fecha y monto, contando repetidas)."""
+    usados = [(m["fecha"], round(m["monto"], 2)) for m in movs]
+    out = list(movs)
+    for f in filas_estado:
+        k = (f["fecha"], round(f["monto"], 2))
+        if k in usados:
+            usados.remove(k)
+        else:
+            out.append({"fecha": f["fecha"], "desc": f["desc"], "monto": f["monto"]})
+    return out
 
 
 def global_abrir_adicionales(page, nombre_tarjeta):

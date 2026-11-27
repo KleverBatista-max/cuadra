@@ -50,5 +50,9 @@ else
   echo "    Tailscale no está instalado. Ver la guía, paso 7."
 fi
 
+echo "==> Opcional: publicar por la IP fija (sin Tailscale Funnel)"
+echo "    Plantillas en $APP/deploy/Caddyfile.ejemplo y cuadra-mcp-direccion.conf.ejemplo (dirección https://<IP-con-guiones>.sslip.io)."
+echo "    En el servidor de producción esto lo hace /opt/bancos/restaurar.sh; ver MANUAL sección 10 (27 nov 2026)."
+
 echo
 echo "Listo. Sigue con la guía desde el paso 3."

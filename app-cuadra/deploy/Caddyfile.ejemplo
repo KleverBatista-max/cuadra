@@ -1,0 +1,60 @@
+# Plantilla de Caddy (27 nov 2026). Reemplaza __IP_PUBLICA__ (ej. 203.0.113.10) y __IP_CON_GUIONES__ (ej. 203-0-113-10).
+# Copiar a /etc/caddy/Caddyfile y: sudo ufw allow 80/tcp 443/tcp 8443/tcp 10000/tcp; sudo systemctl restart caddy.
+# Todo publico directo por la IP fija (sin Tailscale Funnel): 443 = Cuadra + conector; 8443 = Paquetes, Recetas, Escaner, Facturas; 10000 = Reclamos.
+__IP_CON_GUIONES__.sslip.io {
+	bind __IP_PUBLICA__
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		-Server
+	}
+	@mcp path /mcp /mcp/* /token /revoke /register /authorize /cuadra-login /.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/* /.well-known/oauth-authorization-server /.well-known/oauth-authorization-server/*
+	handle @mcp {
+		reverse_proxy 127.0.0.1:9100 {
+			flush_interval -1
+		}
+	}
+	handle {
+		reverse_proxy 127.0.0.1:8080
+	}
+}
+
+__IP_CON_GUIONES__.sslip.io:8443 {
+	bind __IP_PUBLICA__
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		-Server
+	}
+	@recetas path /recetas /recetas/*
+	handle @recetas {
+		reverse_proxy 127.0.0.1:8098
+	}
+	@escaner path /escaner /escaner/*
+	handle @escaner {
+		reverse_proxy 127.0.0.1:8097
+	}
+	@factura path /factura /factura/*
+	handle @factura {
+		reverse_proxy 127.0.0.1:8096
+	}
+	handle {
+		reverse_proxy 127.0.0.1:8090
+	}
+}
+
+__IP_CON_GUIONES__.sslip.io:10000 {
+	bind __IP_PUBLICA__
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		-Server
+	}
+	reverse_proxy 127.0.0.1:8095
+}
